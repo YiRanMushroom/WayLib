@@ -203,7 +203,7 @@ public:
         return std::forward<decltype(self)>(self);
     }
 
-    decltype(auto) concat(this auto &&self, auto &&other) {
+    decltype(auto) join(this auto &&self, auto &&other) {
         // other should be Stream<T>, or other iterable object
         self.data.insert(self.data.end(), other.data.begin(), other.data.end());
         return std::forward<decltype(self)>(self);
