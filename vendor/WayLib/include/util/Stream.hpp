@@ -107,8 +107,8 @@ namespace WayLib {
 
         template<typename TransformerType> // TransformerType: T -> std::optional<U>
         auto mapNotNull(TransformerType &&transformer) {
-            using ResultType = std::remove_reference_t<decltype(*std::declval<std::invoke_result_t<TransformerType, T> >())>
-                    ;
+            using ResultType = std::remove_reference_t<decltype(*std::declval
+                <std::invoke_result_t<TransformerType, T> >())>;
             Stream<ResultType> result;
             for (auto &&item: this->m_Data) {
                 auto transformed = transformer(std::move(item));
@@ -277,7 +277,8 @@ namespace WayLib {
         }
 
         auto findFirst(auto &&predicate) {
-            auto it = std::find_if(this->m_Data.begin(), this->m_Data.end(), std::forward<decltype(predicate)>(predicate));
+            auto it = std::find_if(this->m_Data.begin(), this->m_Data.end(),
+                                   std::forward<decltype(predicate)>(predicate));
             if (it == this->m_Data.end()) {
                 return std::nullopt;
             }
