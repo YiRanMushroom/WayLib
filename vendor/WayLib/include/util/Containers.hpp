@@ -360,7 +360,7 @@ namespace WayLib {
     };
 
     namespace Collectors {
-        auto toDLList() {
+        inline auto toDLList() {
             return [](auto begin, auto end) {
                 DLList<std::remove_reference_t<decltype(*begin)> > list;
                 for (auto it = begin; it != end; ++it) {
