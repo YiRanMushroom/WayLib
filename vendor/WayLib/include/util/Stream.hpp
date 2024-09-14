@@ -107,8 +107,7 @@ public:
 
     template<typename TransformerType> // TransformerType: T -> std::optional<U>
     auto mapNotNull(TransformerType &&transformer) {
-        using ResultType = std::remove_reference_t<decltype(*std::declval<std::invoke_result_t<TransformerType, T> >())>
-                ;
+        using ResultType = std::remove_reference_t<decltype(*std::declval<std::invoke_result_t<TransformerType, T> >())>;
         Stream<ResultType> result;
         for (auto &&item: this->data) {
             auto transformed = transformer(std::move(item));

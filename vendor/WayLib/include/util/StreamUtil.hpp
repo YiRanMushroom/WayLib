@@ -106,5 +106,3 @@ namespace Transformers {
         };
     }
 }
-
-
