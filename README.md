@@ -3,8 +3,10 @@ WayLib is a open source library developed by Yiran Wang, which is originally for
 If you want to use this lib, simply copy the vendor directory into your own project, and add the following line to your CmakeList.txt:
 ```
 file(GLOB WAYLIB_SOURCES vendor/WayLib/impl/*.cpp)
-include_directories(WayLib vendor/WayLib/include)
-add_executable(WayLib ${WAYLIB_SOURCES})
+include_directories(#<YOUR_PROJECT_NAME> vendor/WayLib/include)
+
+# This line must be added after the add_executable command
+target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})
 ```
 
 This should be enough to get you started. If you have any questions or suggestions, please feel free to contact me. I will be happy to help you. Thank you for using WayLib!
