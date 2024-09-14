@@ -1,13 +1,13 @@
 #include <iostream>
-#include <string>
 
+#include "util/Containers.hpp"
 #include "util/Stream.hpp"
 #include "util/StreamUtil.hpp"
 
 int main() {
     std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
     auto res =
-            Streamers::of(v)
+            WayLib::Streamers::of(v)
             .distinct()
             .forEach([](auto &&el) { std::cout << el << ' '; })
             .sortedDesc()
@@ -17,13 +17,13 @@ int main() {
             .mapNotNull([](auto &&el) -> std::optional<int64_t> {
                 return el % 2 == 0 ? std::optional<int>(el) : std::nullopt;
             })
-            .groupedDistinctBy([](auto &&el) { return std::make_pair(Transformers::toString()(el), el); });
+            .collect(WayLib::Collectors::toDLList());
 
-    auto res2 = Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
-            .flatMap(Transformers::allOf()).sortedByDesc(Transformers::identityOf())
-            .collect(Collectors::toSet());
+    auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
+            .flatMap(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
+            .collect(WayLib::Collectors::toSet());
 
-    for (auto &&[key, value]: res) {
-        std::cout << key << " -> " << value << std::endl;
+    for (auto &&val : res) {
+        std::cout << val << std::endl;
     }
 }
