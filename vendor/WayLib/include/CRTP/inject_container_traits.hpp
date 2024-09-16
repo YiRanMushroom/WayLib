@@ -58,27 +58,25 @@ namespace WayLib {
             return std::forward<decltype(self)>(self);
         }
 
-        decltype(auto) filtered(this auto &&self, auto &&filter) {
-            std::vector<T> result;
+        auto filtered(this auto &&self, auto &&filter) {
+            Container<T> result;
             self.forEach([&](auto &&item) {
                 if (filter(item)) {
-                    result.push_back(std::move(item));
+                    result.add(std::move(item));
                 }
             });
-            self.setData(std::move(result));
-            return std::forward<decltype(self)>(self);
+            return result;
         }
 
         decltype(auto) distincted(this auto &&self) {
             std::unordered_set<T> set;
-            self.filtered([&](auto &&item) {
+            return self.filtered([&](auto &&item) {
                 if (set.contains(item)) {
                     return false;
                 }
                 set.insert(item);
                 return true;
             });
-            return std::forward<decltype(self)>(self);
         }
 
         decltype(auto) sorted(this auto &&self) {

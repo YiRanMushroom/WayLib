@@ -29,7 +29,7 @@ namespace WayLib {
     };
 
     template<typename T>
-    class DLList {
+    class DLList : public inject_container_traits<DLList, T> {
         class Node;
         std::shared_ptr<Node> m_Head;
         std::weak_ptr<Node> m_Tail;
@@ -49,8 +49,35 @@ namespace WayLib {
             return m_Tail.lock();
         }
 
+
+
+    public:
+        // primitive operations for CRTP
         [[nodiscard]] size_t size() const {
             return m_Size;
+        }
+
+        // begin, end, erase
+        decltype(auto) add(this auto &&self, auto &&item) {
+            self.insertBack(std::make_shared<T>(std::forward<decltype(item)>(item)));
+            return std::forward<decltype(self)>(self);
+        }
+
+        decltype(auto) emplace(this auto &&self, auto &&... args) {
+            self.insertBack(std::make_shared<T>(std::forward<decltype(args)>(args)...));
+            return std::forward<decltype(self)>(self);
+        }
+
+        decltype(auto) limit(this auto &&self, size_t n) {
+            if (self.size() > n) {
+                auto it = self.begin();
+                std::advance(it, n);
+                self.erase(it, self.end());
+            }
+        }
+
+        decltype(auto) setData(this auto &&self, DLList &&data) {
+            self = std::move(data);
         }
 
     private:
@@ -326,6 +353,12 @@ namespace WayLib {
 
         static void erase(const Iterator &it) {
             it.getNode()->remove();
+        }
+
+        void erase(const Iterator &begin, const Iterator &end) {
+            for (auto it = begin; it != end; ++it) {
+                erase(it);
+            }
         }
 
         void clear() {

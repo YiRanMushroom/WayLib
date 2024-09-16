@@ -22,7 +22,7 @@ int main() {
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
             .collect(WayLib::Collectors::toSet());
 
-    for (auto &&val: res) {
-        std::cout << *val << ' ';
-    }
+    res.forEach([](auto&& ptr) {
+        std::cout << *ptr << ' ';
+    });
 }
