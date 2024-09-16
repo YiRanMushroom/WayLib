@@ -106,5 +106,17 @@ namespace WayLib {
                 return &e;
             };
         }
+
+        inline auto add() {
+            return [](auto &&a, auto &&b) {
+                return a + b;
+            };
+        }
+
+        inline auto multiplies() {
+            return [](auto &&a, auto &&b) {
+                return a * b;
+            };
+        }
     }
 }
