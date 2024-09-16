@@ -12,6 +12,7 @@ add_executable(WayLib
         vendor/WayLib/include/util/StreamUtil.hpp
         vendor/WayLib/impl/Stream/impl.cpp
         vendor/WayLib/include/util/Containers.hpp
+        vendor/WayLib/include/CRTP/inject_container_traits.hpp
 )
 
 target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})
