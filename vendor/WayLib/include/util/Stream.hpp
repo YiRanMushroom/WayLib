@@ -140,7 +140,7 @@ namespace WayLib {
             using V = typename PairType::second_type;
             std::unordered_map<K, V> result;
             for (auto &&item: this->m_Data) {
-                auto [key, value] = std::forward<Mapper>(mapper)(std::move(item));
+                auto [key, value] = mapper(std::move(item));
                 result[key] = value;
             }
             return result;
@@ -154,7 +154,7 @@ namespace WayLib {
             using V = typename PairType::second_type;
             std::unordered_multimap<K, V> result;
             for (auto &&item: this->m_Data) {
-                auto [key, value] = std::forward<Mapper>(mapper)(std::move(item));
+                auto [key, value] = mapper(std::move(item));
                 result.emplace(key, value);
             }
             return result;
@@ -164,7 +164,7 @@ namespace WayLib {
         U fold(U init, auto &&reducer) {
             U result = std::move(init);
             for (auto &&item: this->m_Data) {
-                result = std::forward<decltype(reducer)>(reducer)(std::move(result), std::move(item));
+                result = reducer(std::move(result), std::move(item));
             }
             return result;
         }
@@ -175,7 +175,7 @@ namespace WayLib {
             Stream<U> stream;
             stream.getData().push_back(result);
             for (auto &&item: this->m_Data) {
-                result = std::forward<decltype(reducer)>(reducer)(std::move(result), std::move(item));
+                result = reducer(std::move(result), std::move(item));
                 stream.getData().push_back(result);
             }
             return stream;
@@ -187,7 +187,7 @@ namespace WayLib {
             }
             T result = this->m_Data[0];
             for (size_t i = 1; i < this->m_Data.size(); ++i) {
-                result = std::forward<decltype(reducer)>(reducer)(std::move(result), std::move(this->m_Data[i]));
+                result = reducer(std::move(result), std::move(this->m_Data[i]));
             }
             return result;
         }
@@ -198,7 +198,7 @@ namespace WayLib {
             }
             T result = self.m_Data[0];
             for (size_t i = 1; i < self.m_Data.size(); ++i) {
-                result = std::forward<decltype(reducer)>(reducer)(std::move(result), std::move(self.m_Data[i]));
+                result = reducer(std::move(result), std::move(self.m_Data[i]));
                 self.m_Data[i] = result;
             }
             return std::forward<decltype(self)>(self);
@@ -215,7 +215,7 @@ namespace WayLib {
                 std::invoke_result_t<decltype(transformer), T> >().first)>;
             Stream<ResultType> result;
             for (auto &&item: this->m_Data) {
-                auto [begin, end] = std::forward<decltype(transformer)>(transformer)(std::move(item));
+                auto [begin, end] = transformer(std::move(item));
                 result.getData().insert(result.getData().end(), begin, end);
             }
             return result;
