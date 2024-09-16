@@ -38,8 +38,12 @@ namespace WayLib {
             static_assert(false, "Container must have erase() method");
         }
 
-        decltype(auto) getData(this auto &&self) {
+        /*decltype(auto) getData(this auto &&self) {
             static_assert(false, "Container must have getData() method");
+        }*/
+
+        decltype(auto) setData(this auto &&self, auto &&) {
+            static_assert(false, "Container must have setData() method");
         }
     };
 
@@ -61,7 +65,7 @@ namespace WayLib {
                     result.push_back(std::move(item));
                 }
             });
-            self.getData() = std::move(result);
+            self.setData(std::move(result));
             return std::forward<decltype(self)>(self);
         }
 

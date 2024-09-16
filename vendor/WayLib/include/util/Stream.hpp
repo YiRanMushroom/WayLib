@@ -6,6 +6,7 @@ namespace WayLib {
     template<typename T>
     class Stream : public inject_container_traits<Stream, T> {
         std::vector<T> m_Data;
+
     public:
         Stream() = default;
 
@@ -52,10 +53,20 @@ namespace WayLib {
             return std::forward<decltype(self)>(self);
         }
 
-        std::vector<T> &getData() {
-            return m_Data;
+        decltype(auto) setData(this auto &&self, std::vector<T> &&data) {
+            self.m_Data = std::move(data);
+            return std::forward<decltype(self)>(self);
+        }
+
+        decltype(auto) setData(this auto &&self, const std::vector<T> &data) {
+            self.m_Data = data;
+            return std::forward<decltype(self)>(self);
         }
 
         // above is the primitive operations
+
+        std::vector<T> &getData() {
+            return m_Data;
+        }
     };
 }

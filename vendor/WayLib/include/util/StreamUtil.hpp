@@ -47,7 +47,7 @@ namespace WayLib {
         template<typename T>
         inline Stream<T> of(std::vector<T> &&vec) {
             Stream<T> res{};
-            res.getData() = std::move(vec);
+            res.setData(std::move(vec));
             return res;
         }
 
@@ -60,9 +60,8 @@ namespace WayLib {
         template<typename T, size_t N>
         inline Stream<T> of(std::array<T, N> &&arr) {
             Stream<T> res{};
-            auto &&vec = res.getData();
             for (auto &&e: arr) {
-                vec.push_back(std::move(e));
+                res.add(std::move(e));
             }
             return res;
         }
