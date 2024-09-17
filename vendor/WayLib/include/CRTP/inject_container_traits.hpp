@@ -7,6 +7,8 @@
 #include <optional>
 #include <unordered_map>
 
+#include "util/TypeTraits.hpp"
+
 namespace WayLib {
     template<template<typename...> typename Container, typename T>
     struct inject_container_primitive_traits_check {
@@ -123,15 +125,26 @@ namespace WayLib {
         }
 
         auto groupBy(this auto &&self, auto &&mapper) {
-            using PairType = std::invoke_result_t<decltype(mapper), T>;
-            using K = typename PairType::first_type;
-            using V = typename PairType::second_type;
-            std::unordered_map<K, V> result;
-            self.forEach([&](auto &&item) {
-                auto [key, value] = mapper(std::move(item));
-                result[key] = value;
-            });
-            return result;
+            using Type = std::invoke_result_t<decltype(mapper), T>;
+            if constexpr (is_tuple_like_v<Type>) {
+                using K = std::tuple_element_t<0, Type>;
+                using V = std::tuple_element_t<1, Type>;
+                std::unordered_map<K, V> result;
+                self.forEach([&](auto &&item) {
+                    auto &&[key, value] = mapper(std::forward<decltype(item)>(item));
+                    result[key] = std::move(value);
+                });
+                return result;
+            } else {
+                std::unordered_map<Type, T> result;
+
+                for (auto &&item : self) {
+                    auto key = mapper(std::forward<decltype(item)>(item));
+                    result[key] = std::move(item);
+                }
+
+                return result;
+            }
         }
 
         auto groupMultipleBy(this auto &&self, auto &&mapper) {
@@ -289,7 +302,7 @@ namespace WayLib {
         }
 
         auto mapped(this auto &&self, auto &&transform) {
-            using ResultType = std::invoke_result_t<decltype(transform), T>;
+            using ResultType = std::remove_reference_t<std::invoke_result_t<decltype(transform), T> >;
             Container<ResultType> result;
             self.forEach([&](auto &&item) {
                 result.add(transform(std::move(item)));

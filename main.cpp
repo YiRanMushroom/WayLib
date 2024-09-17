@@ -3,7 +3,6 @@
 #include "util/Containers.hpp"
 #include "util/Stream.hpp"
 #include "util/StreamUtil.hpp"
-#include "CRTP/inject_container_traits.hpp"
 
 int main() {
     std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
@@ -15,14 +14,22 @@ int main() {
             .forEach([](auto &&el) { std::cout << el << ' '; })
             .then([] { std::cout << std::endl; })
             .runningReduced(WayLib::Transformers::add())
-            .mapped([](auto&& el) { return std::make_unique<int>(el); })
-            .collect(WayLib::Collectors::toDLList());
+            .sortedDesc()
+            .let(WayLib::Utils::printAll(std::cout))
+            .mapped(WayLib::Transformers::makeUnique<int>())
+            // .collect(WayLib::Collectors::toDLList())
+            .groupBy([](auto&& el) { return *el; });
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
             .collect(WayLib::Collectors::toSet());
 
-    res.forEach([](auto&& ptr) {
-        std::cout << *ptr << ' ';
-    });
+    using PairType = std::invoke_result_t<decltype([](int el) { return std::make_pair(el, el * el); }), int>;
+
+    PairType p = std::make_pair(1, 2);
+
+    for (auto &&[K, V]: res) {
+        std::cout << K << " -> " << V.get() << std::endl;
+        std::cout << std::endl;
+    }
 }

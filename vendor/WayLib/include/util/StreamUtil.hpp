@@ -4,6 +4,7 @@
 #include <vector>
 #include <util/Stream.hpp>
 #include <string>
+#include <iostream>
 
 namespace WayLib {
     namespace Collectors {
@@ -115,6 +116,41 @@ namespace WayLib {
         inline auto multiplies() {
             return [](auto &&a, auto &&b) {
                 return a * b;
+            };
+        }
+
+        template<typename T>
+        inline auto makeUnique() {
+            return []<typename Type>(Type &&e) {
+                if constexpr (!is_tuple_like_v<Type>) {
+                    return std::make_unique<T>(std::forward<decltype(e)>(e));
+                } else {
+                    return std::apply([](auto &&... args) {
+                        return std::make_unique<T>(std::forward<decltype(args)>(args)...);
+                    }, std::forward<decltype(e)>(e));
+                }
+            };
+        }
+
+        template<typename T>
+        inline auto makeShared() {
+            return []<typename Type>(Type &&e) {
+                if constexpr (!is_tuple_like_v<Type>) {
+                    return std::make_shared<T>(std::forward<decltype(e)>(e));
+                } else {
+                    return std::apply([](auto &&... args) {
+                        return std::make_shared<T>(std::forward<decltype(args)>(args)...);
+                    }, std::forward<decltype(e)>(e));
+                }
+            };
+        }
+    }
+
+    namespace Utils {
+        inline auto printAll(auto& os) {
+            return [&](auto &&e) {
+                e.forEach([&](auto &&el) { os << el << ' '; });
+                std::cout << std::endl;
             };
         }
     }
