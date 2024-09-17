@@ -15,10 +15,10 @@ int main() {
             .then([] { std::cout << std::endl; })
             .runningReduced(WayLib::Transformers::add())
             .sortedDesc()
-            .let(WayLib::Utils::printAll(std::cout))
+            .apply(WayLib::Utils::printAll(std::cout))
             .mapped(WayLib::Transformers::makeUnique<int>())
             // .collect(WayLib::Collectors::toDLList())
-            .groupBy([](auto&& el) { return *el; });
+            .groupBy([](auto &&el) { return *el; });
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())

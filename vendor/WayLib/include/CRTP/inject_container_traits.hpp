@@ -138,7 +138,7 @@ namespace WayLib {
             } else {
                 std::unordered_map<Type, T> result;
 
-                for (auto &&item : self) {
+                for (auto &&item: self) {
                     auto key = mapper(std::forward<decltype(item)>(item));
                     result[key] = std::move(item);
                 }
