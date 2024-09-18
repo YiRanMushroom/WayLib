@@ -14,6 +14,7 @@ add_executable(WayLib
         vendor/WayLib/include/util/Containers.hpp
         vendor/WayLib/include/CRTP/inject_container_traits.hpp
         vendor/WayLib/include/util/TypeTraits.hpp
+        vendor/WayLib/include/util/TriviaTypeDataBuffer.hpp
 )
 
 target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})

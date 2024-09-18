@@ -3,6 +3,7 @@
 #include "util/Containers.hpp"
 #include "util/Stream.hpp"
 #include "util/StreamUtil.hpp"
+#include "util/TriviaTypeDataBuffer.hpp"
 
 int main() {
     std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
@@ -18,7 +19,7 @@ int main() {
             .let(WayLib::Utils::printAll(std::cout))
             .mapped(WayLib::Transformers::makeUnique<int>())
             // .collect(WayLib::Collectors::toDLList())
-            .groupBy([](auto&& el) { return *el; });
+            .groupBy([](auto &&el) { return *el; });
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
@@ -32,4 +33,8 @@ int main() {
         std::cout << K << " -> " << V.get() << std::endl;
         std::cout << std::endl;
     }
+
+    DataBuffer buffer;
+    buffer.push_back(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    buffer[0];
 }

@@ -8,10 +8,18 @@ namespace WayLib {
         std::vector<T> m_Data;
 
     public:
-        Stream() = default;
+        Stream<T>() = default;
 
-        Stream(auto begin, auto end) : m_Data(begin, end) {
+        Stream<T>(auto begin, auto end) : m_Data(begin, end) {
         }
+
+        Stream<T>(const Stream &) = delete;
+
+        Stream<T>(Stream &&) = default;
+
+        Stream<T> &operator=(const Stream &) = delete;
+
+        Stream<T> &operator=(Stream &&) = default;
 
         // start of primitive operations
 

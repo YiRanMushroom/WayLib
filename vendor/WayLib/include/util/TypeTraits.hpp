@@ -2,7 +2,7 @@
 
 namespace WayLib {
     template<typename T, typename = void>
-struct is_tuple_like : std::false_type {
+    struct is_tuple_like : std::false_type {
     };
 
     template<typename T>
