@@ -16,7 +16,7 @@ int main() {
             .then([] { std::cout << std::endl; })
             .runningReduced(WayLib::Transformers::add())
             .sortedDesc()
-            .let(WayLib::Utils::printAll(std::cout))
+            .apply(WayLib::Utils::printAll(std::cout))
             .mapped(WayLib::Transformers::makeUnique<int>())
             // .collect(WayLib::Collectors::toDLList())
             .groupBy([](auto &&el) { return *el; });
