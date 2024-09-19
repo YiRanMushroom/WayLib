@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <memory>
-#include <unordered_set>
+#include "DataBuffer.hpp"
 
 #include "Stream.hpp"
 
@@ -48,8 +48,6 @@ namespace WayLib {
         std::shared_ptr<Node> getTail() const {
             return m_Tail.lock();
         }
-
-
 
     public:
         // primitive operations for CRTP
@@ -208,7 +206,6 @@ namespace WayLib {
                 this->m_Head = std::make_shared<Node>(this);
                 this->m_Head->m_Value = value;
                 this->m_Tail = this->m_Head;
-                ++(this->m_Size);
                 return this->m_Head;
             }
         }
@@ -220,7 +217,6 @@ namespace WayLib {
                 this->m_Head = std::make_shared<Node>(this);
                 this->m_Head->m_Value = value;
                 this->m_Tail = this->m_Head;
-                ++(this->m_Size);
                 return this->m_Head;
             }
         }
@@ -397,6 +393,8 @@ namespace WayLib {
             return [](auto begin, auto end) {
                 DLList<std::remove_reference_t<decltype(*begin)> > list;
                 for (auto it = begin; it != end; ++it) {
+                    std:: cout << "pushing" << *it << ' ';
+                    std:: cout << "list has size " << list.size() << std::endl;
                     list.emplaceBack(std::move(*it));
                 }
                 return list;
@@ -404,5 +402,20 @@ namespace WayLib {
         }
     }
 
+    template<typename T>
+    inline void readBufferImpl(DataBuffer &buffer, DLList<T> &list) {
+        auto size = buffer.read<decltype(list.size())>();
+        for (size_t i = 0; i < size; ++i) {
+            list.emplaceBack(buffer.read<T>());
+        }
+    }
 
+    template<typename T>
+    inline void writeBufferImpl(DataBuffer &buffer, const DLList<T> &list) {
+        buffer.write(list.size());
+        for (auto &&el: list) {
+            std::cout << "pushing" << el << ' ';
+            buffer.write<T>(el);
+        }
+    }
 }

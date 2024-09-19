@@ -17,8 +17,16 @@ int main() {
             .runningReduced(WayLib::Transformers::add())
             .sortedDesc()
             .apply(WayLib::Utils::printAll(std::cout))
-            .mapped(WayLib::Transformers::makeUnique<int>())
-            .groupBy([](auto &&el) { return *el; });
+            .collect(WayLib::Collectors::toDLList())
+            .apply([](auto&& lst) {
+                WayLib::DataBuffer buffer;
+                buffer.pushBack(lst);
+                return buffer;
+            });
+
+    /*auto list = res.read<WayLib::DLList<int>>();
+
+    list.let(WayLib::Utils::printAll(std::cout));*/
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
@@ -35,11 +43,6 @@ int main() {
 
     PairType p = std::make_pair(1, 2);
 
-    for (auto &&[K, V]: res) {
-        std::cout << K << " -> " << V.get() << std::endl;
-        std::cout << std::endl;
-    }
-
     WayLib::DataBuffer buffer;
     buffer.pushBack(std::string{"Hello, World!"});
     auto str = buffer.read<std::string>();
@@ -47,7 +50,7 @@ int main() {
 
     std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8};
     buffer.pushBack(vec);
-    auto vec2 = buffer.read<std::vector<int>>();
+    auto vec2 = buffer.read<std::vector<int> >();
     for (auto &&el: vec2) {
         std::cout << el << ' ';
     }
@@ -56,40 +59,39 @@ int main() {
 
     std::pair<int, int> pair = {1, 2};
     buffer.pushBack(pair);
-    auto pair2 = buffer.read<std::pair<int, int>>();
+    auto pair2 = buffer.read<std::pair<int, int> >();
     std::cout << pair2.first << ' ' << pair2.second << std::endl;
 
     std::tuple<int, std::string, int> tuple = {1, "Hi there", 3};
     buffer.pushBack(tuple);
-    auto tuple2 = buffer.read<std::tuple<int, std::string, int>>();
+    auto tuple2 = buffer.read<std::tuple<int, std::string, int> >();
     std::cout << std::get<0>(tuple2) << ' ' << std::get<1>(tuple2) << ' ' << std::get<2>(tuple2) << std::endl;
 
     std::map<int, std::string> map = {{1, "One"}, {2, "Two"}, {3, "Three"}};
     buffer.pushBack(map);
-    auto map2 = buffer.read<std::map<int, std::string>>();
+    auto map2 = buffer.read<std::map<int, std::string> >();
     for (auto &&[K, V]: map2) {
         std::cout << K << " -> " << V << std::endl;
     }
 
     std::unordered_map<int, std::string> umap = {{1, "One"}, {2, "Two"}, {3, "Three"}};
     buffer.pushBack(umap);
-    auto umap2 = buffer.read<std::unordered_map<int, std::string>>();
+    auto umap2 = buffer.read<std::unordered_map<int, std::string> >();
     for (auto &&[K, V]: umap2) {
         std::cout << K << " -> " << V << std::endl;
     }
 
     std::unordered_set<int> uset = {1, 2, 3, 4, 5};
     buffer.pushBack(uset);
-    auto uset2 = buffer.read<std::unordered_set<int>>();
+    auto uset2 = buffer.read<std::unordered_set<int> >();
     for (auto &&el: uset2) {
         std::cout << el << ' ';
     }
 
     std::set<int> set = {1, 2, 3, 4, 5};
     buffer.pushBack(set);
-    auto set2 = buffer.read<std::set<int>>();
+    auto set2 = buffer.read<std::set<int> >();
     for (auto &&el: set2) {
         std::cout << el << ' ';
     }
-
 }

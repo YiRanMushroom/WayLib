@@ -195,9 +195,8 @@ namespace WayLib {
 
 
         auto fold(_declself_, auto &&init, auto &&reducer) {
-            decltype(init) res = _forward_(init);
             _self_.forEach([&](auto &&item) {
-                res = reducer(std::move(res), _self_.forward(item));
+                init = reducer(_forward_(init), _self_.forward(item));
             });
             return init;
         }
