@@ -393,8 +393,6 @@ namespace WayLib {
             return [](auto begin, auto end) {
                 DLList<std::remove_reference_t<decltype(*begin)> > list;
                 for (auto it = begin; it != end; ++it) {
-                    std:: cout << "pushing" << *it << ' ';
-                    std:: cout << "list has size " << list.size() << std::endl;
                     list.emplaceBack(std::move(*it));
                 }
                 return list;
@@ -414,7 +412,6 @@ namespace WayLib {
     inline void writeBufferImpl(DataBuffer &buffer, const DLList<T> &list) {
         buffer.write(list.size());
         for (auto &&el: list) {
-            std::cout << "pushing" << el << ' ';
             buffer.write<T>(el);
         }
     }

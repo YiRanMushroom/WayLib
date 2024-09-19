@@ -24,9 +24,9 @@ int main() {
                 return buffer;
             });
 
-    /*auto list = res.read<WayLib::DLList<int>>();
+    auto list = res.read<WayLib::DLList<int>>();
 
-    list.let(WayLib::Utils::printAll(std::cout));*/
+    list.let(WayLib::Utils::printAll(std::cout));
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
