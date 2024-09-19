@@ -11,12 +11,14 @@ add_executable(WayLib
         vendor/WayLib/include/util/Stream.hpp
         vendor/WayLib/include/util/StreamUtil.hpp
         vendor/WayLib/impl/Stream/impl.cpp
-        vendor/WayLib/include/util/Containers.hpp
+        vendor/WayLib/include/Container/DLList.hpp
         vendor/WayLib/include/CRTP/inject_container_traits.hpp
         vendor/WayLib/include/util/TypeTraits.hpp
         vendor/WayLib/include/util/DataBuffer.hpp
         vendor/WayLib/include/Macro/DefWayMacro.hpp
         vendor/WayLib/include/Macro/UndefWayMacro.hpp
+        vendor/WayLib/include/Util/StringLiteral.hpp
+        vendor/WayLib/include/Util/RichException.hpp
 )
 
 target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})

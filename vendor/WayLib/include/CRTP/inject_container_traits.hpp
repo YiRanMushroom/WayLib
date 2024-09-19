@@ -129,7 +129,10 @@ namespace WayLib {
             return _self_;
         }
 
+        // very dangerous, easy to unintentionally modify the container
         decltype(auto) let(_declself_, auto &&action) {
+            static_assert(std::is_same_v<std::invoke_result_t<decltype(action), decltype(self)>, void>,
+                          "The action must return void to avoid unintentional modification of the container");
             action(_self_);
             return _self_;
         }
@@ -353,6 +356,28 @@ namespace WayLib {
                 }
             });
             return result;
+        }
+
+        // find the first element that satisfies the predicate
+        // if not found, return std::nullopt
+        std::optional<size_t> binarySearch(_declself_, const auto &func) {
+            size_t left = 0;
+            size_t right = _self_.size();
+
+            while (left < right) {
+                size_t mid = left + (right - left) / 2;
+                if (func(_self_[mid])) {
+                    right = mid;
+                } else {
+                    left = mid + 1;
+                }
+            }
+
+            if (left < _self_.size() && func(_self_[left])) {
+                return left;
+            }
+
+            return std::nullopt;
         }
     };
 }

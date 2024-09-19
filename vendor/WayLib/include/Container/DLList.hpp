@@ -1,32 +1,11 @@
 #pragma once
 #include <algorithm>
 #include <memory>
-#include "DataBuffer.hpp"
+#include "Util/DataBuffer.hpp"
 
-#include "Stream.hpp"
+#include "Util/Stream.hpp"
 
 namespace WayLib {
-    template<size_t N>
-    class StringLiteral {
-    public:
-        constexpr StringLiteral(const char (&tar)[N]) {
-            std::copy(tar, tar + N, str);
-        }
-
-        constexpr const char *get() const {
-            return str;
-        }
-
-        constexpr size_t size() const {
-            return N;
-        }
-
-        constexpr char operator[](size_t index) const {
-            return str[index];
-        }
-
-        char str[N];
-    };
 
     template<typename T>
     class DLList : public inject_container_traits<DLList, T> {

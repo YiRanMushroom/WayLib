@@ -1,9 +1,11 @@
 #include <iostream>
 
-#include "Util/Containers.hpp"
+#include "Container/DLList.hpp"
 #include "Util/Stream.hpp"
 #include "Util/StreamUtil.hpp"
 #include "Util/DataBuffer.hpp"
+
+void failedCode();
 
 int main() {
     std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
@@ -16,17 +18,23 @@ int main() {
             .then([] { std::cout << std::endl; })
             .runningReduced(WayLib::Transformers::add())
             .sortedDesc()
-            .apply(WayLib::Utils::printAll(std::cout))
+            .apply(WayLib::Utils::printAll())
             .collect(WayLib::Collectors::toDLList())
-            .apply([](auto&& lst) {
+            .apply([](auto &&lst) {
                 WayLib::DataBuffer buffer;
                 buffer.pushBack(lst);
                 return buffer;
             });
 
-    auto list = res.read<WayLib::DLList<int>>();
+    auto bs = WayLib::Streamers::of(v)
+            .sorted()
+            .apply(WayLib::Utils::printAll())
+            .binarySearch([](int val) { return val >= 5; })
+            .value();
 
-    list.let(WayLib::Utils::printAll(std::cout));
+    auto list = res.read<WayLib::DLList<int> >();
+
+    list.apply(WayLib::Utils::printAll());
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
@@ -94,4 +102,17 @@ int main() {
     for (auto &&el: set2) {
         std::cout << el << ' ';
     }
+
+    // test fail:
+    try {
+        failedCode();
+    } catch (WayLib::RichException &e) {
+        e.what();
+    }
+}
+
+
+void failedCode() {
+    WayLib::DataBuffer buffer;
+    buffer.read<int>();
 }

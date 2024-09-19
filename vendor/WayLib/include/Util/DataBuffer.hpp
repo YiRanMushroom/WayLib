@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "RichException.hpp"
 #include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
@@ -17,6 +18,22 @@ namespace WayLib {
 
     template<typename T, typename _ = void>
     void readBufferImpl(DataBuffer &buffer, T &ref);
+
+    class BufferOverflowException : public RichException {
+    public:
+        BufferOverflowException() : RichException("DataBuffer: out of range") {
+        }
+
+        explicit BufferOverflowException(const std::string &msg,
+            const std::source_location& location = std::source_location::current(),
+            const std::stacktrace& trace = std::stacktrace::current()) : RichException(msg, location, trace) {
+        }
+
+        explicit BufferOverflowException(std::string &&msg,
+            const std::source_location& location = std::source_location::current(),
+            const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {
+        }
+    };
 }
 
 WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data);
@@ -34,7 +51,8 @@ namespace WayLib {
         size_t m_ReadIndex{};
 
     private:
-        DataBuffer(const DataBuffer &rhs) : m_Data(rhs.m_Data) {}
+        DataBuffer(const DataBuffer &rhs) : m_Data(rhs.m_Data) {
+        }
 
         DataBuffer &operator=(const DataBuffer &rhs) {
             m_Data = rhs.m_Data;
@@ -121,7 +139,12 @@ namespace WayLib {
 
         void checkSize(_declself_, size_t size) {
             if (_self_.m_ReadIndex + size > _self_.m_Data.size()) {
-                throw std::out_of_range("DataBuffer: out of range");
+                throw BufferOverflowException("DataBuffer: out of range, requested size: " + std::to_string(size) +
+                                              ", available size: " + std::to_string(
+                                                  _self_.m_Data.size() - _self_.m_ReadIndex) + std::string(", read index: ") +
+                                                      std::to_string(_self_.m_ReadIndex))
+                .pushOptionalData("DataBuffer", _self_.m_Data)
+                .pushOptionalData("ReadIndex", _self_.m_ReadIndex);
             }
         }
 
@@ -342,7 +365,7 @@ namespace WayLib {
     }
 }
 
-WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer,const auto &data) {
+WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data) {
     buffer.write(_forward_(data));
     return buffer;
 }
