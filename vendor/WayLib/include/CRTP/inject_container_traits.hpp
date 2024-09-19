@@ -7,9 +7,6 @@
 #include <unordered_map>
 
 #include "Macro/DefWayMacro.hpp"
-#include "Macro/DefWayMacro.hpp"
-#include "Macro/DefWayMacro.hpp"
-#include "Macro/DefWayMacro.hpp"
 #include "Util/TypeTraits.hpp"
 
 namespace WayLib {
