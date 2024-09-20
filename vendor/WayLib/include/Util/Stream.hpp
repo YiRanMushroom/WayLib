@@ -8,6 +8,9 @@ namespace WayLib {
     class Stream : public inject_container_traits<Stream, T> {
         std::vector<T> m_Data;
 
+        template<template<typename...> typename, typename>
+        friend struct inject_container_traits;
+
     public:
         Stream<T>() = default;
 
@@ -31,11 +34,13 @@ namespace WayLib {
             return _self_.m_Data.end();
         }
 
-        decltype(auto) add(_declself_, auto &&item) {
+    private:
+        decltype(auto) push(_declself_, auto &&item) {
             _self_.m_Data.push_back(std::forward<decltype(item)>(item));
             return _self_;
         }
 
+    public:
         size_t size(_declself_) {
             return _self_.m_Data.size();
         }
@@ -49,7 +54,7 @@ namespace WayLib {
             return _self_;
         }
 
-        decltype(auto) limit(_declself_, size_t n) {
+        decltype(auto) resize(_declself_, size_t n) {
             if (_self_.m_Data.size() > n) {
                 _self_.m_Data.resize(n);
             }
@@ -71,7 +76,7 @@ namespace WayLib {
             return _self_;
         }
 
-        decltype(auto) operator[](this auto &&self, size_t index) {
+        decltype(auto) operator[](_declself_, size_t index) {
             return _self_.m_Data[index];
         }
 
@@ -79,6 +84,10 @@ namespace WayLib {
 
         decltype(auto) getData(_declself_) {
             return _self_.m_Data;
+        }
+
+        decltype(auto) pushBack(_declself_, auto &&item) {
+            return _self_.push(_forward_(item));
         }
     };
 }

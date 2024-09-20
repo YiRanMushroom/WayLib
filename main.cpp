@@ -4,6 +4,7 @@
 #include "Util/Stream.hpp"
 #include "Util/StreamUtil.hpp"
 #include "Util/DataBuffer.hpp"
+#include "Util/StringLiteral.hpp"
 
 void failedCode();
 
@@ -102,14 +103,17 @@ int main() {
     for (auto &&el: set2) {
         std::cout << el << ' ';
     }
+
     std::cout << std::endl;
 
     // test fail:
     try {
         failedCode();
-    } catch (WayLib::RichException &e) {
+    } catch (std::exception &e) {
         std:: cerr << e.what();
     }
+
+    WayLib::StringLiteral strLit{"Hello, World!"};
 }
 
 int global = 0;

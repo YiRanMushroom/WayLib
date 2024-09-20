@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "RichException.hpp"
+#include "CRTP/inject_container_traits.hpp"
 #include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
@@ -21,21 +22,10 @@ namespace WayLib {
 
     class BufferOverflowException : public RichException {
     public:
-        BufferOverflowException() : RichException("DataBuffer: out of range") {
-        }
-
-        explicit BufferOverflowException(const std::string &msg,
-            const std::source_location& location = std::source_location::current(),
-            const std::stacktrace& trace = std::stacktrace::current()) : RichException(msg, location, trace) {
-        }
-
-        explicit BufferOverflowException(std::string &&msg,
-            const std::source_location& location = std::source_location::current(),
-            const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {
-        }
+        DeclWayLibExceptionConstructors(BufferOverflowException, "DataBuffer Overflow")
 
         [[nodiscard]] std::string exceptionType() const override {
-            return "Util::WayLib::DataBuffer::BufferOverflowException";
+            return "WayLib::DataBuffer::BufferOverflowException";
         }
     };
 }
@@ -49,7 +39,7 @@ WayLib::DataBuffer &operator>>(WayLib::DataBuffer &buffer, auto &data);
 WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data);
 
 namespace WayLib {
-    class DataBuffer {
+    class DataBuffer : public inject_type_converts {
         std::vector<uint8_t> m_Data;
 
         size_t m_ReadIndex{};
@@ -143,12 +133,11 @@ namespace WayLib {
 
         void checkSize(_declself_, size_t size) {
             if (_self_.m_ReadIndex + size > _self_.m_Data.size()) {
-                throw BufferOverflowException("DataBuffer overflow afterchecking, requested size: " + std::to_string(size) +
+                throw BufferOverflowException("DataBuffer overflow after checking, requested size: " + std::to_string(size) +
                                               ", available size: " + std::to_string(
                                                   _self_.m_Data.size() - _self_.m_ReadIndex) + std::string(", read index: ") +
                                                       std::to_string(_self_.m_ReadIndex))
-                .pushOptionalData("DataBuffer", _self_.m_Data)
-                .pushOptionalData("ReadIndex", _self_.m_ReadIndex);
+                .pushOptionalData("DataBuffer", std::make_shared<DataBuffer>(_self_.move()));
             }
         }
 

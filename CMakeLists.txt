@@ -19,6 +19,7 @@ add_executable(WayLib
         vendor/WayLib/include/Macro/UndefWayMacro.hpp
         vendor/WayLib/include/Util/StringLiteral.hpp
         vendor/WayLib/include/Util/RichException.hpp
+        test/test_deducing_this.cpp
 )
 
 target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})

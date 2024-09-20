@@ -2,34 +2,29 @@
 
 #include <string>
 #include <utility>
-#include <vector>
 #include <source_location>
 #include <stacktrace>
 #include <unordered_map>
 #include <any>
-#include <iostream>
 #include <sstream>
 
+#include "CRTP/inject_container_traits.hpp"
 #include "Macro/DefWayMacro.hpp"
 #include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
-    inline bool isNewLine(std::ostream& os) {
-        return os.rdbuf()->sputc('\n') == '\n';
-    }
-
-    class RichException {
+    class RichException : public inject_type_converts, public std::exception {
         std::unordered_map<std::string, std::any> m_OptionalData;
         std::string m_Message;
         std::source_location m_Location;
         std::stacktrace m_Stacktrace;
+        mutable std::string m_MessageCache;
 
     public:
         explicit RichException(std::string message,
                                const std::source_location &location = std::source_location::current(),
                                std::stacktrace stacktrace = std::stacktrace::current()) : m_Message(std::move(message)),
-            m_Location(location), m_Stacktrace(std::move(stacktrace)) {
-        }
+            m_Location(location), m_Stacktrace(std::move(stacktrace)) {}
 
         decltype(auto) getOptionalData(_declself_) {
             return _self_.m_OptionalData;
@@ -41,25 +36,38 @@ namespace WayLib {
         }
 
         [[nodiscard]] virtual std::string exceptionType() const {
-            return "Util::WayLib::Exception";
+            return "WayLib::Exception";
         }
 
-        [[nodiscard]] virtual std::string what() const {
+        [[nodiscard]] const char *what() const override {
             std::stringstream ss;
 
-            ss << '['<< exceptionType() << "]: " << m_Message << std::endl;
+            ss << '[' << exceptionType() << "]: " << m_Message << std::endl;
             ss << "Error Occurred At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
             ss << "When Calling Function: " << m_Location.function_name() << std::endl;
-            ss << "Stacktrace: " << std::endl;
             for (auto &&frame: m_Stacktrace) {
-                ss << "  @At: " << frame << std::endl;
+                ss << "  at: " << frame << std::endl;
             }
 
-            return ss.str();
+            m_MessageCache = ss.str();
+
+            return m_MessageCache.c_str();
         }
 
-        virtual ~RichException() = default;
+        ~RichException() override = default;
     };
 }
+
+#define DeclWayLibExceptionConstructors(ExceptionType, DefaultMessage) \
+ExceptionType() : RichException(DefaultMessage) {}\
+\
+explicit ExceptionType(const std::string &msg,\
+    const std::source_location& location = std::source_location::current(),\
+    const std::stacktrace& trace = std::stacktrace::current()) : RichException(msg, location, trace) {}\
+\
+explicit ExceptionType(std::string &&msg,\
+    const std::source_location& location = std::source_location::current(),\
+    const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {}\
+
 
 #include "Macro/UndefWayMacro.hpp"

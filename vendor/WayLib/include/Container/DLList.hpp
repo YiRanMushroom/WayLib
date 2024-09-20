@@ -35,7 +35,7 @@ namespace WayLib {
         }
 
         // begin, end, erase
-        decltype(auto) add(this auto &&self, auto &&item) {
+        decltype(auto) push(this auto &&self, auto &&item) {
             self.insertBack(std::make_shared<T>(std::forward<decltype(item)>(item)));
             return std::forward<decltype(self)>(self);
         }
@@ -45,7 +45,7 @@ namespace WayLib {
             return std::forward<decltype(self)>(self);
         }
 
-        decltype(auto) limit(this auto &&self, size_t n) {
+        decltype(auto) resize(this auto &&self, size_t n) {
             if (self.size() > n) {
                 auto it = self.begin();
                 std::advance(it, n);

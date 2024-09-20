@@ -5,12 +5,13 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <type_traits>
 
+#include "Macro/DefWayMacro.hpp"
 #include "Macro/DefWayMacro.hpp"
 #include "Util/TypeTraits.hpp"
 
 namespace WayLib {
-    template<template<typename...> typename Container, typename T>
     struct inject_container_primitive_traits_check {
         auto begin(_declself_) {
             static_assert(false, "Container must have begin() method");
@@ -20,8 +21,8 @@ namespace WayLib {
             static_assert(false, "Container must have end() method");
         }
 
-        decltype(auto) add(_declself_, auto &&) {
-            static_assert(false, "Container must have add() method");
+        decltype(auto) push(_declself_, auto &&) {
+            static_assert(false, "Container must have push() method");
         }
 
         size_t size(_declself_) {
@@ -32,41 +33,40 @@ namespace WayLib {
             static_assert(false, "Container must have emplace() method");
         }
 
-        decltype(auto) limit(_declself_, size_t) {
-            static_assert(false, "Container must have limit() method");
+        decltype(auto) resize(_declself_, size_t) {
+            static_assert(false, "Container must have resize() method");
         }
 
         decltype(auto) erase(_declself_, auto &&...) {
             static_assert(false, "Container must have erase() method");
         }
 
-        /*decltype(auto) getData(this auto &&self) {
-            static_assert(false, "Container must have getData() method");
-        }*/
-
         decltype(auto) setData(_declself_, auto &&) {
             static_assert(false, "Container must have setData() method");
         }
-
-        decltype(auto) operator[](this auto &&self, size_t) {
-            static_assert(false, "Container must have operator[] method");
-        }
     };
 
-    template<template<typename...> typename Container, typename T>
-    struct inject_container_traits : public inject_container_primitive_traits_check<Container, T> {
+    struct inject_type_converts {
         decltype(auto) forward(_declself_, auto &&item) {
-            if constexpr (std::is_rvalue_reference_v<decltype(self)>) {
+            if constexpr (std::is_rvalue_reference_v<decltype(_self_)>) {
                 return std::move(item);
             } else {
                 return item;
             }
         }
 
+        decltype(auto) forward(_declself_) {
+            return _self_;
+        }
+
         decltype(auto) move(_declself_) {
             return std::move(self);
         }
+    };
 
+    template<template<typename...> typename Container, typename T>
+    struct inject_container_traits : public inject_container_primitive_traits_check,
+                                     public inject_type_converts {
         auto collect(_declself_, auto &&collector) {
             return collector(_self_.begin(), _self_.end());
         }
@@ -83,7 +83,7 @@ namespace WayLib {
             Container<T> result;
             _self_.forEach([&](auto &&item) {
                 if (filter(item)) {
-                    result.add(_self_.forward(item));
+                    result.push(_self_.forward(item));
                 }
             });
             return result;
@@ -215,14 +215,14 @@ namespace WayLib {
 
         decltype(auto) joined(_declself_, const auto &other) {
             std::for_each(other.begin(), other.end(), [&](auto &&item) {
-                _self_.add(item);
+                _self_.push(item);
             });
             return _self_;
         }
 
         decltype(auto) joined(_declself_, auto &&other) {
             std::for_each(other.begin(), other.end(), [&](auto &&item) {
-                _self_.add(std::move(item));
+                _self_.push(std::move(item));
             });
             return _self_;
         }
@@ -238,9 +238,9 @@ namespace WayLib {
             std::remove_reference_t<decltype(self)> result, other;
             _self_.forEach([&](auto &&item) {
                 if (predicate(item)) {
-                    result.add(_self_.forward(item));
+                    result.push(_self_.forward(item));
                 } else {
-                    other.add(_self_.forward(item));
+                    other.push(_self_.forward(item));
                 }
             });
             return std::make_pair(result, other);
@@ -303,7 +303,7 @@ namespace WayLib {
                 auto transformed = transformer(_self_.forward(item));
                 auto &&[begin, end] = transformed;
                 std::for_each(begin, end, [&](auto &&el) {
-                    result.add(_self_.forward(el));
+                    result.push(_self_.forward(el));
                 });
             });
             return result;
@@ -315,10 +315,10 @@ namespace WayLib {
             }
             Container<T> result;
             T acc = _self_.forward(*_self_.begin());
-            result.add(acc);
+            result.push(acc);
             for (auto it = _self_.begin() + 1; it != _self_.end(); ++it) {
                 acc = reducer(std::move(acc), _self_.forward(*it));
-                result.add(acc);
+                result.push(acc);
             }
             return result;
         }
@@ -327,10 +327,10 @@ namespace WayLib {
             using U = decltype(reducer(_forward_(init), _self_.forward(*_self_.begin())));
             Container<U> stream;
             decltype(init) res = _forward_(init);
-            stream.add(res);
+            stream.push(res);
             _self_.forEach([&](auto &&item) {
                 res = reducer(std::move(res), _self_.forward(item));
-                stream.add(res);
+                stream.push(res);
             });
             return stream;
         }
@@ -339,7 +339,7 @@ namespace WayLib {
             using ResultType = std::remove_reference_t<std::invoke_result_t<decltype(transform), T> >;
             Container<ResultType> result;
             _self_.forEach([&](auto &&item) {
-                result.add(transform(_self_.forward(item)));
+                result.push(transform(_self_.forward(item)));
             });
             return result;
         }
@@ -352,7 +352,7 @@ namespace WayLib {
             _self_.forEach([&](auto &&item) {
                 auto transformed = transformer(_self_.forward(item));
                 if (transformed.has_value()) {
-                    result.add(std::move(transformed.value()));
+                    result.push(std::move(transformed.value()));
                 }
             });
             return result;
