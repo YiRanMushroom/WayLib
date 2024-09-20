@@ -33,6 +33,10 @@ namespace WayLib {
             const std::source_location& location = std::source_location::current(),
             const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {
         }
+
+        [[nodiscard]] std::string exceptionType() const override {
+            return "Util::WayLib::DataBuffer::BufferOverflowException";
+        }
     };
 }
 
@@ -139,7 +143,7 @@ namespace WayLib {
 
         void checkSize(_declself_, size_t size) {
             if (_self_.m_ReadIndex + size > _self_.m_Data.size()) {
-                throw BufferOverflowException("DataBuffer: out of range, requested size: " + std::to_string(size) +
+                throw BufferOverflowException("DataBuffer overflow afterchecking, requested size: " + std::to_string(size) +
                                               ", available size: " + std::to_string(
                                                   _self_.m_Data.size() - _self_.m_ReadIndex) + std::string(", read index: ") +
                                                       std::to_string(_self_.m_ReadIndex))

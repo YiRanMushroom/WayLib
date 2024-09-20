@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <any>
 #include <iostream>
+#include <sstream>
 
 #include "Macro/DefWayMacro.hpp"
 #include "Macro/DefWayMacro.hpp"
@@ -43,22 +44,18 @@ namespace WayLib {
             return "Util::WayLib::Exception";
         }
 
-        [[nodiscard]] virtual std::ostream &getOs() const {
-            return std::cerr;
-        }
+        [[nodiscard]] virtual std::string what() const {
+            std::stringstream ss;
 
-        virtual void what() const {
-            auto &os = getOs();
-            if (isNewLine(os)) {
-                os << std::endl;
-            }
-            os << '['<< exceptionType() << "]: " << m_Message << std::endl;
-            os << "Error Occurred At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
-            os << "When Calling Function: " << m_Location.function_name() << std::endl;
-            os << "Stacktrace: " << std::endl;
+            ss << '['<< exceptionType() << "]: " << m_Message << std::endl;
+            ss << "Error Occurred At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
+            ss << "When Calling Function: " << m_Location.function_name() << std::endl;
+            ss << "Stacktrace: " << std::endl;
             for (auto &&frame: m_Stacktrace) {
-                os << "  @At: " << frame << std::endl;
+                ss << "  @At: " << frame << std::endl;
             }
+
+            return ss.str();
         }
 
         virtual ~RichException() = default;

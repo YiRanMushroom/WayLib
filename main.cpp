@@ -102,17 +102,28 @@ int main() {
     for (auto &&el: set2) {
         std::cout << el << ' ';
     }
+    std::cout << std::endl;
 
     // test fail:
     try {
         failedCode();
     } catch (WayLib::RichException &e) {
-        e.what();
+        std:: cerr << e.what();
     }
 }
 
+int global = 0;
+
+inline int getGlobal() {
+    return global++;
+}
+
+void foo(int a, int b) {
+    std::cout << a << ' ' << b << std::endl;
+}
 
 void failedCode() {
     WayLib::DataBuffer buffer;
     buffer.read<int>();
+    foo(getGlobal(), getGlobal());
 }
