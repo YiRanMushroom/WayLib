@@ -43,8 +43,8 @@ namespace WayLib {
             std::stringstream ss;
 
             ss << '[' << exceptionType() << "]: " << m_Message << std::endl;
-            ss << "Error Occurred At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
-            ss << "When Calling Function: " << m_Location.function_name() << std::endl;
+            ss << "Exception Threw At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
+            ss << "In Function: " << m_Location.function_name() << std::endl;
             for (auto &&frame: m_Stacktrace) {
                 ss << "  at: " << frame << std::endl;
             }
