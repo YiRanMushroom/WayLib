@@ -5,6 +5,9 @@ WayLib is (hopefully) an inline header only library, which means you can simply 
 WayLib is only for C++23 or later, and can now only be compiled using MSVC. I will try to make it compatible with other compilers in the future.
 
 If you want to use this lib, simply copy the WayLib directory into your own project, and add the "WayLib/include" directory to your include path. Then you can include the header files in your source code.
+
+This is an example of how to include the header files in your source code, I used this in this project's CMakeLists.txt file:
+
 ```
 # Please add WayLib/include to your include path, like this, assuming your project is called _Example_Project_, and the WayLib directory is in the root directory (with CMakeLists.txt):
 # This is an example of how to include the header files in your source code.
