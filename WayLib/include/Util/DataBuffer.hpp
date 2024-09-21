@@ -30,13 +30,13 @@ namespace WayLib {
     };
 }
 
-WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data);
+inline WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data);
 
-WayLib::DataBuffer &&operator<<(WayLib::DataBuffer &&buffer, const auto &data);
+inline WayLib::DataBuffer &&operator<<(WayLib::DataBuffer &&buffer, const auto &data);
 
-WayLib::DataBuffer &operator>>(WayLib::DataBuffer &buffer, auto &data);
+inline WayLib::DataBuffer &operator>>(WayLib::DataBuffer &buffer, auto &data);
 
-WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data);
+inline WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data);
 
 namespace WayLib {
     class DataBuffer : public inject_type_converts {
@@ -367,22 +367,22 @@ namespace WayLib {
     }
 }
 
-WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data) {
+inline WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data) {
     buffer.write(_forward_(data));
     return buffer;
 }
 
-WayLib::DataBuffer &&operator<<(WayLib::DataBuffer &&buffer, const auto &data) {
+inline WayLib::DataBuffer &&operator<<(WayLib::DataBuffer &&buffer, const auto &data) {
     buffer.write(_forward_(data));
     return std::move(buffer);
 }
 
-WayLib::DataBuffer &operator>>(WayLib::DataBuffer &buffer, auto &data) {
+inline WayLib::DataBuffer &operator>>(WayLib::DataBuffer &buffer, auto &data) {
     buffer.read(data);
     return buffer;
 }
 
-WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data) {
+inline WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data) {
     buffer.read(data);
     return std::move(buffer);
 }
