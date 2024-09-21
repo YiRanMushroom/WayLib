@@ -4,6 +4,7 @@
 #include "Util/Stream.hpp"
 #include "Util/StreamUtil.hpp"
 #include "Util/DataBuffer.hpp"
+#include "Util/FileSystem.hpp"
 #include "Util/StringLiteral.hpp"
 
 void failedCode();
@@ -11,15 +12,15 @@ void failedCode();
 int main() {
     std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
     auto res =
-            WayLib::Streamers::of(v)
+            WayLib::Streamers::Of(v)
             .distincted()
             .sortedDesc()
             .then([] { std::cout << std::endl; })
             .forEach([](auto &&el) { std::cout << el << ' '; })
             .then([] { std::cout << std::endl; })
-            .runningReduced(WayLib::Transformers::add())
+            .runningReduced(WayLib::Transformers::Add())
             .sortedDesc()
-            .let(WayLib::Utils::printAll())
+            .let(WayLib::Utils::PrintAll())
             .collect(WayLib::Collectors::toDLList())
             .apply([](auto &&lst) {
                 WayLib::DataBuffer buffer;
@@ -27,19 +28,34 @@ int main() {
                 return buffer;
             });
 
-    auto bs = WayLib::Streamers::of(v)
+    auto bs = WayLib::Streamers::Of(v)
             .sorted()
-            .let(WayLib::Utils::printAll())
+            .let(WayLib::Utils::PrintAll())
             .binarySearch([](int val) { return val >= 5; })
             .value();
 
+    auto location = WayLib::Utils::FileLocation{"resources/test.txt"};
+
+    std::cout << location.getPath() << std::endl;
+
+    WayLib::DataBuffer buffer_wr;
+    buffer_wr.pushBack(std::vector{1.0, 2.0, 3.0, 4.0, 5.0});
+    auto ofs = location.ofstream();
+    buffer_wr.writeToStream(ofs);
+    ofs.close();
+
+    auto ifs = location.ifstream();
+    WayLib::DataBuffer buffer_rd = WayLib::CreateBufferFromStream(ifs);
+
+    auto vec = buffer_rd.read<std::vector<double> >();
+
     auto list = res.read<WayLib::DLList<int> >();
 
-    list.let(WayLib::Utils::printAll());
+    list.let(WayLib::Utils::PrintAll());
 
-    auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
-            .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
-            .mapped(WayLib::Transformers::makeUnique<int>())
+    auto res2 = WayLib::Streamers::Of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
+            .flatMapped(WayLib::Transformers::AllOf()).sortedByDesc(WayLib::Transformers::IdentityOf())
+            .mapped(WayLib::Transformers::MakeUnique<int>())
             .forEach([](std::unique_ptr<int> &&ptr) {
                 std::unique_ptr<int> p = std::forward<decltype(ptr)>(ptr);
             });
@@ -50,19 +66,13 @@ int main() {
 
     using PairType = std::invoke_result_t<decltype([](int el) { return std::make_pair(el, el * el); }), int>;
 
+    WayLib::DataBuffer buffer;
+
     PairType p = std::make_pair(1, 2);
 
-    WayLib::DataBuffer buffer;
     buffer.pushBack(std::string{"Hello, World!"});
     auto str = buffer.read<std::string>();
     std::cout << str << std::endl;
-
-    std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8};
-    buffer.pushBack(vec);
-    auto vec2 = buffer.read<std::vector<int> >();
-    for (auto &&el: vec2) {
-        std::cout << el << ' ';
-    }
 
     std::cout << std::endl;
 

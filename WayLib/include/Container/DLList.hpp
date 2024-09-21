@@ -380,7 +380,7 @@ namespace WayLib {
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, DLList<T> &list) {
+    inline void ReadBufferImpl(DataBuffer &buffer, DLList<T> &list) {
         auto size = buffer.read<decltype(list.size())>();
         for (size_t i = 0; i < size; ++i) {
             list.emplaceBack(buffer.read<T>());
@@ -388,7 +388,7 @@ namespace WayLib {
     }
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const DLList<T> &list) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const DLList<T> &list) {
         buffer.write(list.size());
         for (auto &&el: list) {
             buffer.write<T>(el);

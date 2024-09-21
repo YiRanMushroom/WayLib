@@ -8,7 +8,7 @@
 
 namespace WayLib {
     namespace Collectors {
-        inline auto toVector() {
+        inline auto ToVector() {
             return [](auto begin, auto end) {
                 std::vector<std::remove_reference_t<decltype(*begin)> > result;
                 for (auto it = begin; it != end; ++it) {
@@ -18,7 +18,7 @@ namespace WayLib {
             };
         }
 
-        inline auto toUnorderedSet() {
+        inline auto ToUnorderedSet() {
             return [](auto begin, auto end) {
                 std::unordered_set<std::remove_reference_t<decltype(*begin)> > result;
                 for (auto it = begin; it != end; ++it) {
@@ -28,7 +28,7 @@ namespace WayLib {
             };
         }
 
-        inline auto toSet() {
+        inline auto ToSet() {
             return [](auto begin, auto end) {
                 std::set<std::remove_reference_t<decltype(*begin)> > result;
                 for (auto it = begin; it != end; ++it) {
@@ -41,12 +41,12 @@ namespace WayLib {
 
     namespace Streamers {
         template<typename T>
-        inline Stream<T> of(const std::vector<T> &vec) {
+        inline Stream<T> Of(const std::vector<T> &vec) {
             return Stream<T>(vec.begin(), vec.end());
         }
 
         template<typename T>
-        inline Stream<T> of(std::vector<T> &&vec) {
+        inline Stream<T> Of(std::vector<T> &&vec) {
             Stream<T> res{};
             res.setData(std::move(vec));
             return res;
@@ -54,12 +54,12 @@ namespace WayLib {
 
         // std::array
         template<typename T, size_t N>
-        inline Stream<T> of(const std::array<T, N> &arr) {
+        inline Stream<T> Of(const std::array<T, N> &arr) {
             return Stream<T>(arr.begin(), arr.end());
         }
 
         template<typename T, size_t N>
-        inline Stream<T> of(std::array<T, N> &&arr) {
+        inline Stream<T> Of(std::array<T, N> &&arr) {
             Stream<T> res{};
             for (auto &&e: arr) {
                 res.add(std::move(e));
@@ -69,58 +69,58 @@ namespace WayLib {
     }
 
     namespace Transformers {
-        inline auto toString() {
+        inline auto ToString() {
             return [](auto &&e) {
                 return std::to_string(e);
             };
         }
 
         template<typename T>
-        inline auto castTo() {
+        inline auto CastTo() {
             return [](auto &&e) {
                 return static_cast<T>(e);
             };
         }
 
         template<typename T>
-        inline auto constructTo() {
+        inline auto ConstructTo() {
             return []<typename... Args>(Args &&... args) {
                 return T(std::forward<Args>(args)...);
             };
         }
 
-        inline auto allOf() {
+        inline auto AllOf() {
             return [](auto &&e) {
                 return std::make_pair(e.begin(), e.end());
             };
         }
 
-        inline auto identityOf() {
+        inline auto IdentityOf() {
             return [](auto &&e) -> decltype(auto) {
                 return std::forward<decltype(e)>(e);
             };
         }
 
-        inline auto addressOf() {
+        inline auto AddressOf() {
             return [](auto &&e) {
                 return &e;
             };
         }
 
-        inline auto add() {
+        inline auto Add() {
             return [](auto &&a, auto &&b) {
                 return a + b;
             };
         }
 
-        inline auto multiplies() {
+        inline auto Multiplies() {
             return [](auto &&a, auto &&b) {
                 return a * b;
             };
         }
 
         template<typename T>
-        inline auto makeUnique() {
+        inline auto MakeUnique() {
             return []<typename Type>(Type &&e) {
                 if constexpr (!is_tuple_like_v<Type>) {
                     return std::make_unique<T>(std::forward<decltype(e)>(e));
@@ -133,7 +133,7 @@ namespace WayLib {
         }
 
         template<typename T>
-        inline auto makeShared() {
+        inline auto MakeShared() {
             return []<typename Type>(Type &&e) {
                 if constexpr (!is_tuple_like_v<Type>) {
                     return std::make_shared<T>(std::forward<decltype(e)>(e));
@@ -147,7 +147,7 @@ namespace WayLib {
     }
 
     namespace Utils {
-        inline auto printAll(std::ostream &os = std::cout) {
+        inline auto PrintAll(std::ostream &os = std::cout) {
             return [&](auto &&e) {
                 e.forEach([&](auto &&el) { os << el << ' '; })
                         .then([&] { os << std::endl; });

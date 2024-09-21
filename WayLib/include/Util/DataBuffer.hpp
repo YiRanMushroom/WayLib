@@ -15,10 +15,10 @@ namespace WayLib {
     class DataBuffer;
 
     template<typename T, typename _ = void>
-    void writeBufferImpl(DataBuffer &buffer, const T &data);
+    void WriteBufferImpl(DataBuffer &buffer, const T &data);
 
     template<typename T, typename _ = void>
-    void readBufferImpl(DataBuffer &buffer, T &ref);
+    void ReadBufferImpl(DataBuffer &buffer, T &ref);
 
     class BufferOverflowException : public RichException {
     public:
@@ -71,19 +71,16 @@ namespace WayLib {
             return copy;
         }
 
-        template<typename T>
-        decltype(auto) simpleAppend(_declself_, const T *t) {
-            constexpr size_t size = sizeof(T);
-            for (size_t i = 0; i < size; ++i) {
-                _self_.m_Data.push_back(reinterpret_cast<const uint8_t *>(t)[i]);
-            }
+        decltype(auto) simpleAppend(_declself_, const void *data, size_t size) {
+            _self_.m_Data.resize(_self_.m_Data.size() + size);
+            std::memcpy(_self_.m_Data.data() + _self_.m_Data.size() - size, data, size);
             return _self_;
         }
 
-        decltype(auto) simpleAppend(_declself_, const void *data, size_t size) {
-            for (size_t i = 0; i < size; ++i) {
-                _self_.m_Data.push_back(reinterpret_cast<const uint8_t *>(data)[i]);
-            }
+        template<typename T>
+        decltype(auto) simpleAppend(_declself_, const T *t) {
+            constexpr size_t size = sizeof(T);
+            _self_.simpleAppend(reinterpret_cast<const void *>(t), size);
             return _self_;
         }
 
@@ -91,13 +88,13 @@ namespace WayLib {
 
         template<typename T>
         decltype(auto) write(_declself_, const T &data) {
-            writeBufferImpl(self, _forward_(data));
+            WriteBufferImpl(self, _forward_(data));
             return _self_;
         }
 
         template<typename T>
         decltype(auto) read(_declself_, T &t) {
-            readBufferImpl(self, t);
+            ReadBufferImpl(self, t);
             return _self_;
         }
 
@@ -144,15 +141,27 @@ namespace WayLib {
         size_t &getReadIndex(_declself_) {
             return _self_.m_ReadIndex;
         }
+
+        void writeToStream(_declself_, std::ostream &os) {
+            os.write(reinterpret_cast<const char *>(_self_.m_Data.data()), _self_.m_Data.size());
+        }
     };
 
+    inline DataBuffer CreateBufferFromStream(std::istream &is) {
+        DataBuffer buffer;
+        std::stringstream ss;
+        ss << is.rdbuf();
+        buffer.simpleAppend(ss.str().data(), ss.str().size());
+        return buffer;
+    }
+
     template<typename T, typename _>
-    void writeBufferImpl(DataBuffer &buffer, const T &data) {
+    void WriteBufferImpl(DataBuffer &buffer, const T &data) {
         buffer.simpleAppend(&data);
     }
 
     template<typename T, typename _>
-    void readBufferImpl(DataBuffer &buffer, T &ref) {
+    void ReadBufferImpl(DataBuffer &buffer, T &ref) {
         buffer.checkSize(sizeof(T));
         ref = reinterpret_cast<T &>(buffer.getData()[buffer.getReadIndex()]);
         buffer.getReadIndex() += sizeof(T);
@@ -161,29 +170,29 @@ namespace WayLib {
     // std::string
 
     template<>
-    inline void writeBufferImpl<const char *, void>(DataBuffer &buffer, const char *const &data) = delete;
+    inline void WriteBufferImpl<const char *, void>(DataBuffer &buffer, const char *const &data) = delete;
 
     template<>
-    inline void writeBufferImpl(DataBuffer &buffer, char *const &data) = delete;
+    inline void WriteBufferImpl(DataBuffer &buffer, char *const &data) = delete;
 
     // please use std::string instead of char*
 
     template<>
-    inline void readBufferImpl(DataBuffer &buffer, const char *&ref) = delete;
+    inline void ReadBufferImpl(DataBuffer &buffer, const char *&ref) = delete;
 
     template<>
-    inline void readBufferImpl(DataBuffer &buffer, char *&ref) = delete;
+    inline void ReadBufferImpl(DataBuffer &buffer, char *&ref) = delete;
 
     // please use std::string instead of char*
 
     template<>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::string &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::string &data) {
         buffer.write(data.size());
         buffer.simpleAppend(data.data(), data.size());
     }
 
     template<>
-    inline void readBufferImpl(DataBuffer &buffer, std::string &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::string &ref) {
         auto size = buffer.read<decltype(std::string{}.size())>();
         ref.reserve(size);
         for (size_t i = 0; i < size; ++i) {
@@ -194,7 +203,7 @@ namespace WayLib {
     // vector<T>
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::vector<T> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::vector<T> &data) {
         buffer.write(data.size());
         for (auto &&el: data) {
             buffer.write(el);
@@ -202,7 +211,7 @@ namespace WayLib {
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, std::vector<T> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::vector<T> &ref) {
         auto size = buffer.read<decltype(std::vector<T>{}.size())>();
         ref.reserve(size);
         for (size_t i = 0; i < size; ++i) {
@@ -213,13 +222,13 @@ namespace WayLib {
     // std::pair
 
     template<typename T1, typename T2>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::pair<T1, T2> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::pair<T1, T2> &data) {
         buffer.write(data.first);
         buffer.write(data.second);
     }
 
     template<typename T1, typename T2>
-    inline void readBufferImpl(DataBuffer &buffer, std::pair<T1, T2> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::pair<T1, T2> &ref) {
         buffer >> ref.first;
         buffer >> ref.second;
     }
@@ -227,14 +236,14 @@ namespace WayLib {
     // std::tuple
 
     template<typename... Ts>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::tuple<Ts...> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::tuple<Ts...> &data) {
         std::apply([&buffer](auto &&... args) {
             (buffer.write(args), ...);
         }, data);
     }
 
     template<typename... Ts>
-    inline void readBufferImpl(DataBuffer &buffer, std::tuple<Ts...> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::tuple<Ts...> &ref) {
         std::apply([&buffer](auto &... args) {
             ((buffer >> args), ...);
         }, ref);
@@ -242,7 +251,7 @@ namespace WayLib {
 
     // std::map
     template<typename K, typename V>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::map<K, V> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::map<K, V> &data) {
         buffer.write(data.size());
         for (auto &&[key, value]: data) {
             buffer.write(key);
@@ -251,7 +260,7 @@ namespace WayLib {
     }
 
     template<typename K, typename V>
-    inline void readBufferImpl(DataBuffer &buffer, std::map<K, V> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::map<K, V> &ref) {
         auto size = buffer.read<decltype(std::map<K, V>{}.size())>();
         for (size_t i = 0; i < size; ++i) {
             K key = buffer.read<K>();
@@ -263,7 +272,7 @@ namespace WayLib {
     // std::unordered_map
 
     template<typename K, typename V>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::unordered_map<K, V> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::unordered_map<K, V> &data) {
         buffer.write(data.size());
         for (auto &&[key, value]: data) {
             buffer.write(key);
@@ -272,7 +281,7 @@ namespace WayLib {
     }
 
     template<typename K, typename V>
-    inline void readBufferImpl(DataBuffer &buffer, std::unordered_map<K, V> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::unordered_map<K, V> &ref) {
         auto size = buffer.read<decltype(std::unordered_map<K, V>{}.size())>();
         for (size_t i = 0; i < size; ++i) {
             K key = buffer.read<K>();
@@ -284,7 +293,7 @@ namespace WayLib {
     // std::set
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::set<T> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::set<T> &data) {
         buffer.write(data.size());
         for (auto &&el: data) {
             buffer.write(el);
@@ -292,7 +301,7 @@ namespace WayLib {
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, std::set<T> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::set<T> &ref) {
         auto size = buffer.read<decltype(std::set<T>{}.size())>();
         for (size_t i = 0; i < size; ++i) {
             ref.insert(buffer.read<T>());
@@ -302,7 +311,7 @@ namespace WayLib {
     // std::unordered_set
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::unordered_set<T> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::unordered_set<T> &data) {
         buffer.write(data.size());
         for (auto &&el: data) {
             buffer.write(el);
@@ -310,7 +319,7 @@ namespace WayLib {
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, std::unordered_set<T> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::unordered_set<T> &ref) {
         auto size = buffer.read<decltype(std::unordered_set<T>{}.size())>();
         for (size_t i = 0; i < size; ++i) {
             ref.insert(buffer.read<T>());
@@ -320,14 +329,14 @@ namespace WayLib {
     // std::array
 
     template<typename T, size_t N>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::array<T, N> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::array<T, N> &data) {
         for (auto &&el: data) {
             buffer.write(el);
         }
     }
 
     template<typename T, size_t N>
-    inline void readBufferImpl(DataBuffer &buffer, std::array<T, N> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::array<T, N> &ref) {
         for (size_t i = 0; i < N; ++i) {
             ref[i] = buffer.read<T>();
         }
@@ -336,24 +345,24 @@ namespace WayLib {
     // std::unique_ptr
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::unique_ptr<T> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::unique_ptr<T> &data) {
         buffer.write(data.get());
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, std::unique_ptr<T> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::unique_ptr<T> &ref) {
         ref = std::make_unique<T>(buffer.read<T>());
     }
 
     // std::shared_ptr
 
     template<typename T>
-    inline void writeBufferImpl(DataBuffer &buffer, const std::shared_ptr<T> &data) {
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::shared_ptr<T> &data) {
         buffer.write(data.get());
     }
 
     template<typename T>
-    inline void readBufferImpl(DataBuffer &buffer, std::shared_ptr<T> &ref) {
+    inline void ReadBufferImpl(DataBuffer &buffer, std::shared_ptr<T> &ref) {
         ref = std::make_shared<T>(buffer.read<T>());
     }
 }
