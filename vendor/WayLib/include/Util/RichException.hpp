@@ -45,8 +45,11 @@ namespace WayLib {
             ss << '[' << exceptionType() << "]: " << m_Message << std::endl;
             ss << "Exception Threw At: " << m_Location.file_name() << ":" << m_Location.line() << std::endl;
             ss << "In Function: " << m_Location.function_name() << std::endl;
+            ss << "Stacktrace: " << std::endl;
             for (auto &&frame: m_Stacktrace) {
-                ss << "  at: " << frame << std::endl;
+                if (frame.source_line())
+                    ss << "  at: " << frame.description() << " in file:" << frame.source_file() << " line: " <<
+                            frame.source_line() << " [" << frame.native_handle() << ']' << std::endl;
             }
 
             m_MessageCache = ss.str();
@@ -67,7 +70,6 @@ explicit ExceptionType(const std::string &msg,\
 \
 explicit ExceptionType(std::string &&msg,\
     const std::source_location& location = std::source_location::current(),\
-    const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {}\
-
+    const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {}
 
 #include "Macro/UndefWayMacro.hpp"
