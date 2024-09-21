@@ -148,8 +148,8 @@ namespace WayLib {
 
     namespace Utils {
         inline auto printAll(std::ostream &os = std::cout) {
-            return [&](auto &&e) -> decltype(auto) {
-                return e.forEach([&](auto &&el) { os << el << ' '; })
+            return [&](auto &&e) {
+                e.forEach([&](auto &&el) { os << el << ' '; })
                         .then([&] { os << std::endl; });
             };
         }

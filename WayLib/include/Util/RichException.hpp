@@ -10,7 +10,6 @@
 
 #include "CRTP/inject_container_traits.hpp"
 #include "Macro/DefWayMacro.hpp"
-#include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
     class RichException : public inject_type_converts, public std::exception {

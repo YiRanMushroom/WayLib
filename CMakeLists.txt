@@ -1,25 +1,17 @@
 cmake_minimum_required(VERSION 3.28)
-project(WayLib)
+project(WayLib_Development)
 
 set(CMAKE_CXX_STANDARD 23)
 
-file(GLOB WAYLIB_SOURCES vendor/WayLib/impl/*.cpp)
-include_directories(WayLib vendor/WayLib/include)
+# Please add WayLib/include to your include path, like this, assuming your project is called _Example_Project_, and the WayLib directory is in the root directory (with CMakeLists.txt):
+# This is an example of how to include the header files in your source code.
 
-add_executable(WayLib
-        main.cpp
-        vendor/WayLib/include/util/Stream.hpp
-        vendor/WayLib/include/util/StreamUtil.hpp
-        vendor/WayLib/impl/Stream/impl.cpp
-        vendor/WayLib/include/Container/DLList.hpp
-        vendor/WayLib/include/CRTP/inject_container_traits.hpp
-        vendor/WayLib/include/util/TypeTraits.hpp
-        vendor/WayLib/include/util/DataBuffer.hpp
-        vendor/WayLib/include/Macro/DefWayMacro.hpp
-        vendor/WayLib/include/Macro/UndefWayMacro.hpp
-        vendor/WayLib/include/Util/StringLiteral.hpp
-        vendor/WayLib/include/Util/RichException.hpp
-        test/test_deducing_this.cpp
+include_directories(${CMAKE_SOURCE_DIR}/WayLib/include
+        #                   ...(other include directories that you need)
 )
 
-target_sources(WayLib PRIVATE ${WAYLIB_SOURCES})
+# This line must be added before the add_executable or add_library command.
+
+add_executable(WayLib_Development
+        main.cpp
+)

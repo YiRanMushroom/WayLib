@@ -19,7 +19,7 @@ int main() {
             .then([] { std::cout << std::endl; })
             .runningReduced(WayLib::Transformers::add())
             .sortedDesc()
-            .apply(WayLib::Utils::printAll())
+            .let(WayLib::Utils::printAll())
             .collect(WayLib::Collectors::toDLList())
             .apply([](auto &&lst) {
                 WayLib::DataBuffer buffer;
@@ -29,13 +29,13 @@ int main() {
 
     auto bs = WayLib::Streamers::of(v)
             .sorted()
-            .apply(WayLib::Utils::printAll())
+            .let(WayLib::Utils::printAll())
             .binarySearch([](int val) { return val >= 5; })
             .value();
 
     auto list = res.read<WayLib::DLList<int> >();
 
-    list.apply(WayLib::Utils::printAll());
+    list.let(WayLib::Utils::printAll());
 
     auto res2 = WayLib::Streamers::of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
             .flatMapped(WayLib::Transformers::allOf()).sortedByDesc(WayLib::Transformers::identityOf())
@@ -110,7 +110,7 @@ int main() {
     try {
         failedCode();
     } catch (std::exception &e) {
-        std:: cerr << e.what();
+        std::cerr << e.what();
     }
 
     WayLib::StringLiteral strLit{"Hello, World!"};
