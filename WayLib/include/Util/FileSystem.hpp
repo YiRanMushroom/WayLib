@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <Macro/DefWayMacro.hpp>
+#include <Util/Exceptions.hpp>
 
 namespace WayLib::Utils {
     inline std::string GetExecutablePath() {
@@ -39,7 +40,7 @@ namespace WayLib::Utils {
 
         decltype(auto) assertOpens(_declself_, auto &&stream) {
             if (!stream.is_open()) {
-                throw RichException("Failed to open file")
+                throw FileIOException("Failed to open file")
                       .pushOptionalData("stream", std::make_shared<
                                             std::remove_reference_t<decltype(stream)> >(stream))
                       > (std::move(stream));

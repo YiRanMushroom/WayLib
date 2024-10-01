@@ -10,7 +10,7 @@
 void failedCode();
 
 int main() {
-    std::vector v = {1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
+    std::vector v{1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
     auto res =
             WayLib::Streamers::Of(v)
             .distincted()
@@ -116,12 +116,11 @@ int main() {
 
     std::cout << std::endl;
 
-    // test fail:
-    try {
-        failedCode();
-    } catch (std::exception &e) {
-        std::cerr << e.what();
-    }
+    WayLib::DLList lst{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    lst.sortedDesc();
+
+    lst.forEach([](int el) { std::cout << el << ' '; });
 
     WayLib::StringLiteral strLit{"Hello, World!"};
 }

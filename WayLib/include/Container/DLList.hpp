@@ -1,12 +1,12 @@
 #pragma once
 #include <algorithm>
 #include <memory>
+#include <vector>
 #include "Util/DataBuffer.hpp"
-
 #include "Util/Stream.hpp"
+#include "Util/StreamUtil.hpp"
 
 namespace WayLib {
-
     template<typename T>
     class DLList : public inject_container_traits<DLList, T> {
         class Node;
@@ -231,7 +231,8 @@ namespace WayLib {
             std::shared_ptr<Node> m_Node;
 
         public:
-            explicit Iterator(const std::shared_ptr<Node> &node) : m_Node{node} {}
+            explicit Iterator(const std::shared_ptr<Node> &node) : m_Node{node} {
+            }
 
             Iterator() = default;
 
@@ -364,8 +365,34 @@ namespace WayLib {
             return stream;
         }
 
+        static auto Of(auto &&container) {
+            DLList<std::remove_reference_t<decltype(*container.begin())> > list;
+
+            std::for_each(container.begin(), container.end(), [&](auto &&el) {
+                list.emplaceBack(std::move(el));
+            });
+
+            return list;
+        }
+
+        decltype(auto) sortedWith(this auto &&self, auto &&comparator) {
+            std::vector<std::shared_ptr<T> > vec;
+            for (auto it = self.begin(); it != self.end(); ++it) {
+                vec.push_back(it.getNode()->getPtr());
+            }
+            std::sort(vec.begin(), vec.end(), [&](const auto &lhs, const auto &rhs) {
+                return comparator(*lhs, *rhs);
+            });
+            self.clear();
+            for (auto &&el: vec) {
+                self.insertBack(std::move(el));
+            }
+        }
+
         ~DLList() = default;
     };
+
+
 
     namespace Collectors {
         inline auto toDLList() {

@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "RichException.hpp"
+#include "RuntimeException.hpp"
 #include "CRTP/inject_container_traits.hpp"
 #include "Macro/DefWayMacro.hpp"
 
@@ -20,7 +20,7 @@ namespace WayLib {
     template<typename T, typename _ = void>
     void ReadBufferImpl(DataBuffer &buffer, T &ref);
 
-    class BufferOverflowException : public RichException {
+    class BufferOverflowException : public RuntimeException {
     public:
         DeclWayLibExceptionConstructors(BufferOverflowException, "DataBuffer Overflow")
 

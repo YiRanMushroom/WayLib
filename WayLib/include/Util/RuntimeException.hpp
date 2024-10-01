@@ -12,7 +12,7 @@
 #include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
-    class RichException : public inject_type_converts, public std::exception {
+    class RuntimeException : public inject_type_converts, public std::exception {
         std::unordered_map<std::string, std::any> m_OptionalData;
         std::string m_Message;
         std::source_location m_Location;
@@ -20,10 +20,12 @@ namespace WayLib {
         mutable std::string m_MessageCache;
 
     public:
-        explicit RichException(std::string message,
-                               const std::source_location &location = std::source_location::current(),
-                               std::stacktrace stacktrace = std::stacktrace::current()) : m_Message(std::move(message)),
-            m_Location(location), m_Stacktrace(std::move(stacktrace)) {}
+        explicit RuntimeException(std::string message,
+                                  const std::source_location &location = std::source_location::current(),
+                                  std::stacktrace stacktrace = std::stacktrace::current()) : m_Message(std::move(
+                message)),
+            m_Location(location), m_Stacktrace(std::move(stacktrace)) {
+        }
 
         decltype(auto) getOptionalData(_declself_) {
             return _self_.m_OptionalData;
@@ -56,19 +58,19 @@ namespace WayLib {
             return m_MessageCache.c_str();
         }
 
-        ~RichException() override = default;
+        ~RuntimeException() override = default;
     };
 }
 
 #define DeclWayLibExceptionConstructors(ExceptionType, DefaultMessage) \
-ExceptionType() : RichException(DefaultMessage) {}\
+ExceptionType() : RuntimeException(DefaultMessage) {}\
 \
 explicit ExceptionType(const std::string &msg,\
     const std::source_location& location = std::source_location::current(),\
-    const std::stacktrace& trace = std::stacktrace::current()) : RichException(msg, location, trace) {}\
+    const std::stacktrace& trace = std::stacktrace::current()) : RuntimeException(msg, location, trace) {}\
 \
 explicit ExceptionType(std::string &&msg,\
     const std::source_location& location = std::source_location::current(),\
-    const std::stacktrace& trace = std::stacktrace::current()) : RichException(std::move(msg), location, trace) {}
+    const std::stacktrace& trace = std::stacktrace::current()) : RuntimeException(std::move(msg), location, trace) {}
 
 #include "Macro/UndefWayMacro.hpp"

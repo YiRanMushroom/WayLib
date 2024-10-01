@@ -7,7 +7,7 @@ namespace WayLib {
     template<size_t N>
 class StringLiteral : inject_type_converts {
     public:
-        constexpr explicit StringLiteral(const char (&tar)[N]) {
+        constexpr StringLiteral(const char (&tar)[N]) {
             std::copy(tar, tar + N, str);
         }
 

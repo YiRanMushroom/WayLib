@@ -15,4 +15,5 @@ include_directories(${CMAKE_SOURCE_DIR}/WayLib/include
 add_executable(WayLib_Development
         main.cpp
         WayLib/include/Util/FileSystem.hpp
+        WayLib/include/Util/Exceptions.hpp
 )

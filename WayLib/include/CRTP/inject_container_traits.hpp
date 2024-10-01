@@ -100,33 +100,30 @@ namespace WayLib {
             });
         }
 
-        decltype(auto) sorted(_declself_) {
-            std::sort(_self_.begin(), _self_.end());
-            return _self_;
-        }
-
-        decltype(auto) sortedDesc(_declself_) {
-            std::sort(_self_.begin(), _self_.end(), std::greater{});
-            return _self_;
-        }
-
-        decltype(auto) sortedBy(_declself_, auto &&transform) {
-            std::sort(_self_.begin(), _self_.end(), [&](const T &a, const T &b) {
-                return transform(a) < transform(b);
-            });
-            return _self_;
-        }
-
-        decltype(auto) sortedByDesc(_declself_, auto &&transform) {
-            std::sort(_self_.begin(), _self_.end(), [&](const T &a, const T &b) {
-                return transform(a) > transform(b);
-            });
-            return _self_;
-        }
-
+        // change sortedWith to change all sort behavior
         decltype(auto) sortedWith(_declself_, auto &&comparator) {
             std::sort(_self_.begin(), _self_.end(), _forward_(comparator));
             return _self_;
+        }
+
+        decltype(auto) sorted(_declself_) {
+            return _self_.sortedWith(std::less{});
+        }
+
+        decltype(auto) sortedDesc(_declself_) {
+            return _self_.sortedWith(std::greater{});
+        }
+
+        decltype(auto) sortedBy(_declself_, auto &&transform) {
+            return _self_.sortedWith([&](const T &a, const T &b) {
+                return transform(a) < transform(b);
+            });
+        }
+
+        decltype(auto) sortedByDesc(_declself_, auto &&transform) {
+            return _self_.sortedWith([&](const T &a, const T &b) {
+                return transform(a) > transform(b);
+            });
         }
 
         // very dangerous, easy to unintentionally modify the container
