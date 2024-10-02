@@ -101,26 +101,26 @@ namespace WayLib {
         }
 
         // change sortedWith to change all sort behavior
-        decltype(auto) sortedWith(_declself_, auto &&comparator) {
+        decltype(auto) sortWith(_declself_, auto &&comparator) {
             std::sort(_self_.begin(), _self_.end(), _forward_(comparator));
             return _self_;
         }
 
-        decltype(auto) sorted(_declself_) {
+        decltype(auto) sort(_declself_) {
             return _self_.sortedWith(std::less{});
         }
 
-        decltype(auto) sortedDesc(_declself_) {
+        decltype(auto) sortDesc(_declself_) {
             return _self_.sortedWith(std::greater{});
         }
 
-        decltype(auto) sortedBy(_declself_, auto &&transform) {
+        decltype(auto) sortBy(_declself_, auto &&transform) {
             return _self_.sortedWith([&](const T &a, const T &b) {
                 return transform(a) < transform(b);
             });
         }
 
-        decltype(auto) sortedByDesc(_declself_, auto &&transform) {
+        decltype(auto) sortByDesc(_declself_, auto &&transform) {
             return _self_.sortedWith([&](const T &a, const T &b) {
                 return transform(a) > transform(b);
             });

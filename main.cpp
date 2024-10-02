@@ -14,7 +14,7 @@ int main() {
     auto res =
             WayLib::Streamers::Of(v)
             .distincted()
-            .sortedDesc()
+            .sortDesc()
             .then([] { std::cout << std::endl; })
             .forEach([](auto &&el) { std::cout << el << ' '; })
             .then([] { std::cout << std::endl; })
@@ -29,7 +29,7 @@ int main() {
             });
 
     auto bs = WayLib::Streamers::Of(v)
-            .sorted()
+            .sort()
             .let(WayLib::Utils::PrintAll())
             .binarySearch([](int val) { return val >= 5; })
             .value();
@@ -54,7 +54,7 @@ int main() {
     list.let(WayLib::Utils::PrintAll());
 
     auto res2 = WayLib::Streamers::Of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
-            .flatMapped(WayLib::Transformers::AllOf()).sortedByDesc(WayLib::Transformers::IdentityOf())
+            .flatMapped(WayLib::Transformers::AllOf()).sortByDesc(WayLib::Transformers::IdentityOf())
             .mapped(WayLib::Transformers::MakeUnique<int>())
             .forEach([](std::unique_ptr<int> &&ptr) {
                 std::unique_ptr<int> p = std::forward<decltype(ptr)>(ptr);
@@ -118,7 +118,7 @@ int main() {
 
     WayLib::DLList lst{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-    lst.sortedDesc();
+    lst.sortDesc();
 
     lst.forEach([](int el) { std::cout << el << ' '; });
 
