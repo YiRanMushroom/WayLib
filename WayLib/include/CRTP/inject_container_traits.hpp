@@ -79,19 +79,20 @@ namespace WayLib {
             return _self_;
         }
 
-        auto filtered(_declself_, auto &&filter) {
+        auto filter(_declself_, auto &&filter) {
             Container<T> result;
             _self_.forEach([&](auto &&item) {
                 if (filter(item)) {
                     result.push(_self_.forward(item));
                 }
             });
-            return result;
+            self = std::move(result);
+            return _self_;
         }
 
-        decltype(auto) distincted(_declself_) {
+        decltype(auto) distinct(_declself_) {
             std::unordered_set<T> set;
-            return _self_.filtered([&](auto &&item) {
+            return _self_.filter([&](auto &&item) {
                 if (set.contains(item)) {
                     return false;
                 }
@@ -107,21 +108,21 @@ namespace WayLib {
         }
 
         decltype(auto) sort(_declself_) {
-            return _self_.sortedWith(std::less{});
+            return _self_.sortWith(std::less{});
         }
 
         decltype(auto) sortDesc(_declself_) {
-            return _self_.sortedWith(std::greater{});
+            return _self_.sortWith(std::greater{});
         }
 
         decltype(auto) sortBy(_declself_, auto &&transform) {
-            return _self_.sortedWith([&](const T &a, const T &b) {
+            return _self_.sortWith([&](const T &a, const T &b) {
                 return transform(a) < transform(b);
             });
         }
 
         decltype(auto) sortByDesc(_declself_, auto &&transform) {
-            return _self_.sortedWith([&](const T &a, const T &b) {
+            return _self_.sortWith([&](const T &a, const T &b) {
                 return transform(a) > transform(b);
             });
         }
@@ -210,21 +211,21 @@ namespace WayLib {
             return result;
         }
 
-        decltype(auto) joined(_declself_, const auto &other) {
+        decltype(auto) join(_declself_, const auto &other) {
             std::for_each(other.begin(), other.end(), [&](auto &&item) {
                 _self_.push(item);
             });
             return _self_;
         }
 
-        decltype(auto) joined(_declself_, auto &&other) {
+        decltype(auto) join(_declself_, auto &&other) {
             std::for_each(other.begin(), other.end(), [&](auto &&item) {
                 _self_.push(std::move(item));
             });
             return _self_;
         }
 
-        decltype(auto) skipped(_declself_, size_t n) {
+        decltype(auto) skip(_declself_, size_t n) {
             if (_self_.size() > n) {
                 _self_.erase(_self_.begin(), _self_.begin() + n);
             }
@@ -290,69 +291,6 @@ namespace WayLib {
                 action(index++, _forward_(item));
             });
             return _self_;
-        }
-
-        auto flatMapped(_declself_, auto &&transformer) {
-            using ResultType = std::remove_reference_t<decltype(*std::declval<
-                std::invoke_result_t<decltype(transformer), T> >().first)>;
-            Container<ResultType> result;
-            _self_.forEach([&](auto &&item) {
-                auto transformed = transformer(_self_.forward(item));
-                auto &&[begin, end] = transformed;
-                std::for_each(begin, end, [&](auto &&el) {
-                    result.push(_self_.forward(el));
-                });
-            });
-            return result;
-        }
-
-        auto runningReduced(_declself_, auto &&reducer) {
-            if (self.empty()) {
-                return Container<T>();
-            }
-            Container<T> result;
-            T acc = _self_.forward(*_self_.begin());
-            result.push(acc);
-            for (auto it = _self_.begin() + 1; it != _self_.end(); ++it) {
-                acc = reducer(std::move(acc), _self_.forward(*it));
-                result.push(acc);
-            }
-            return result;
-        }
-
-        auto runningFolded(_declself_, auto &&init, auto &&reducer) {
-            using U = decltype(reducer(_forward_(init), _self_.forward(*_self_.begin())));
-            Container<U> stream;
-            decltype(init) res = _forward_(init);
-            stream.push(res);
-            _self_.forEach([&](auto &&item) {
-                res = reducer(std::move(res), _self_.forward(item));
-                stream.push(res);
-            });
-            return stream;
-        }
-
-        auto mapped(_declself_, auto &&transform) {
-            using ResultType = std::remove_reference_t<std::invoke_result_t<decltype(transform), T> >;
-            Container<ResultType> result;
-            _self_.forEach([&](auto &&item) {
-                result.push(transform(_self_.forward(item)));
-            });
-            return result;
-        }
-
-        // TransformerType: T -> std::optional<U>
-        auto mappedNotNull(_declself_, auto &&transformer) {
-            using ResultType = std::remove_reference_t<decltype(*std::declval
-                <std::invoke_result_t<decltype(transformer), T> >())>;
-            Container<ResultType> result;
-            _self_.forEach([&](auto &&item) {
-                auto transformed = transformer(_self_.forward(item));
-                if (transformed.has_value()) {
-                    result.push(std::move(transformed.value()));
-                }
-            });
-            return result;
         }
 
         // find the first element that satisfies the predicate

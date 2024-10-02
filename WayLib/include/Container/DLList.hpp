@@ -231,8 +231,7 @@ namespace WayLib {
             std::shared_ptr<Node> m_Node;
 
         public:
-            explicit Iterator(const std::shared_ptr<Node> &node) : m_Node{node} {
-            }
+            explicit Iterator(const std::shared_ptr<Node> &node) : m_Node{node} {}
 
             Iterator() = default;
 
@@ -375,7 +374,17 @@ namespace WayLib {
             return list;
         }
 
-        decltype(auto) sortedWith(this auto &&self, auto &&comparator) {
+        static auto Of(const auto &container) {
+            DLList<std::remove_reference_t<decltype(*container.begin())> > list;
+
+            std::for_each(container.begin(), container.end(), [&](const auto &el) {
+                list.emplaceBack(el);
+            });
+
+            return list;
+        }
+
+        decltype(auto) sortWith(this auto &&self, auto &&comparator) {
             std::vector<std::shared_ptr<T> > vec;
             for (auto it = self.begin(); it != self.end(); ++it) {
                 vec.push_back(it.getNode()->getPtr());
@@ -391,7 +400,6 @@ namespace WayLib {
 
         ~DLList() = default;
     };
-
 
 
     namespace Collectors {

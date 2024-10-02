@@ -13,13 +13,13 @@ int main() {
     std::vector v{1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
     auto res =
             WayLib::Streamers::Of(v)
-            .distincted()
+            .distinct()
             .sortDesc()
             .then([] { std::cout << std::endl; })
             .forEach([](auto &&el) { std::cout << el << ' '; })
             .then([] { std::cout << std::endl; })
-            .runningReduced(WayLib::Transformers::Add())
-            .sortedDesc()
+            .runningReduce(WayLib::Transformers::Add())
+            .sortDesc()
             .let(WayLib::Utils::PrintAll())
             .collect(WayLib::Collectors::toDLList())
             .apply([](auto &&lst) {
@@ -54,8 +54,8 @@ int main() {
     list.let(WayLib::Utils::PrintAll());
 
     auto res2 = WayLib::Streamers::Of(std::vector<std::vector<int> >{{1, 2, 3}, {7, 9, 8}, {6, 5, 4}})
-            .flatMapped(WayLib::Transformers::AllOf()).sortByDesc(WayLib::Transformers::IdentityOf())
-            .mapped(WayLib::Transformers::MakeUnique<int>())
+            .flatMap(WayLib::Transformers::AllOf()).sortByDesc(WayLib::Transformers::IdentityOf())
+            .map(WayLib::Transformers::MakeUnique<int>())
             .forEach([](std::unique_ptr<int> &&ptr) {
                 std::unique_ptr<int> p = std::forward<decltype(ptr)>(ptr);
             });
@@ -125,18 +125,60 @@ int main() {
     WayLib::StringLiteral strLit{"Hello, World!"};
 }
 
-int global = 0;
-
-inline int getGlobal() {
-    return global++;
-}
-
-void foo(int a, int b) {
-    std::cout << a << ' ' << b << std::endl;
-}
-
 void failedCode() {
+    /*struct Int {
+        int val;
+
+        Int() = default;
+
+        int & operator++() {
+            return ++val;
+        }
+
+        Int(int val) : val(val) {}
+
+        bool operator==(const Int &rhs) const {
+            return val == rhs.val;
+        }
+
+        bool operator!=(const Int &rhs) const {
+            return !(rhs == *this);
+        }
+
+        bool operator<(const Int &rhs) const {
+            return val < rhs.val;
+        }
+
+        bool operator>(const Int &rhs) const {
+            return rhs < *this;
+        }
+
+        bool operator<=(const Int &rhs) const {
+            return !(rhs < *this);
+        }
+
+        bool operator>=(const Int &rhs) const {
+            return !(*this < rhs);
+        }
+
+        Int & operator=(const Int &rhs) {
+            val = rhs.val;
+            return *this;
+        }
+    };
+
+    std::map<Int, Int> mp1;
+
+    Int b = 0;
+
+    mp1[++b].operator=(++b);
+
+    Int c{};
+
+    std::map<Int, Int> mp2;
+
+    mp2[++c] = ++c;*/
+
     WayLib::DataBuffer buffer;
     buffer.read<int>();
-    foo(getGlobal(), getGlobal());
 }

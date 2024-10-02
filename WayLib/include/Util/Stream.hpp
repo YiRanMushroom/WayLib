@@ -1,12 +1,16 @@
 #pragma once
 
 #include "CRTP/inject_container_traits.hpp"
+#include "CRTP/inject_stream_traits.hpp"
 #include "Macro/DefWayMacro.hpp"
 
 namespace WayLib {
     template<typename T>
-    class Stream : public inject_container_traits<Stream, T> {
+    class Stream : public inject_stream_traits<Stream, T>, public inject_container_traits<Stream, T> {
         std::vector<T> m_Data;
+
+        template<template<typename...> typename, typename>
+        friend struct inject_stream_traits;
 
         template<template<typename...> typename, typename>
         friend struct inject_container_traits;
