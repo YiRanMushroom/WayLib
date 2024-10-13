@@ -17,4 +17,5 @@ add_executable(WayLib_Development
         WayLib/include/Util/FileSystem.hpp
         WayLib/include/Util/Exceptions.hpp
         WayLib/include/CRTP/inject_stream_traits.hpp
+        WayLib/include/Util/StringUtil.hpp
 )

@@ -66,6 +66,10 @@ namespace WayLib {
             }
             return res;
         }
+
+        inline Stream<char> Of(const std::string &str) {
+            return Stream<char>(str.begin(), str.end());
+        }
     }
 
     namespace Transformers {
