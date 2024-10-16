@@ -19,4 +19,6 @@ add_executable(WayLib_Development
         WayLib/include/CRTP/inject_stream_traits.hpp
         WayLib/include/Container/ThreadsafeQueue.hpp
         WayLib/include/Util/ThreadPool.hpp
+        WayLib/include/Util/Range/Range.hpp
+        WayLib/include/Util/Range/RangeUtil.hpp
 )
