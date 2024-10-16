@@ -1,32 +1,43 @@
 #pragma once
 
 #include "Range.hpp"
+#include "Util/TypeTraits.hpp"
+
+#include <unordered_map>
 
 namespace WayLib::Ranges {
+
+
     struct ToRangeImplClass {
         template<typename Container>
         auto operator()(Container &&container) const {
             using T = typename std::decay_t<Container>::value_type;
 
-            if constexpr (std::is_same_v<Container, std::vector<T> &&>) {
-                return Range<T, void>([data = std::forward<Container>(container)]() {
-                    return std::make_shared<std::vector<T> >(std::move(data));
-                });
-            }
-
-            std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
-
-            vec->reserve(container.size());
-            for (auto &item: container) {
-                if constexpr (std::is_rvalue_reference_v<decltype(container)>) {
-                    vec->push_back(std::move(item));
+            if constexpr (IsRangeV<std::decay_t<Container> >) {
+                return std::forward<Container>(container);
+            } else {
+                if constexpr (std::is_same_v<Container, std::vector<T> &&>) {
+                    return Range<T, void>(
+                        [vec = std::make_shared<std::vector<T> >(std::forward<Container>(container))]() {
+                            return vec;
+                        });
                 } else {
-                    vec->push_back(item);
+                    std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
+
+                    vec->reserve(container.size());
+                    for (auto &item: container) {
+                        if constexpr (std::is_rvalue_reference_v<decltype(container)>) {
+                            vec->push_back(std::move(item));
+                        } else {
+                            vec->push_back(item);
+                        }
+                    }
+
+                    return Range<T, void>([vec]() {
+                        return vec;
+                    });
                 }
             }
-            return Range<T, void>([vec]() {
-                return vec;
-            });
         }
     };
 
@@ -103,13 +114,6 @@ namespace WayLib::Ranges {
         };
     }
 
-    inline auto sync() {
-        return [](auto &&range) -> decltype(auto) {
-            range.get();
-            return std::forward<decltype(range)>(range);
-        };
-    }
-
     inline auto typeDecay() {
         return [](auto &&range) {
             using OriginalType = std::decay_t<decltype(range)>;
@@ -157,6 +161,83 @@ namespace WayLib::Ranges {
             static_assert(!std::is_same_v<RangeType, void>, "Cannot discard last operation of a primary range");
 
             return range.getParent();
+        };
+    }
+
+    template<typename Container>
+    auto concat(Container &&container) {
+        return [other = container | toRange()](auto &&range) {
+            other | forEach([&range](auto &&item) {
+                range.get()->push_back(std::forward<decltype(item)>(item));
+            }) | sync();
+
+            return range;
+        };
+    }
+
+    template<typename... Ts>
+    auto append(Ts &&... items) {
+        return [items = std::make_tuple(std::forward<Ts>(items)...)](auto &&range) {
+            std::apply([&range](auto &&... items) {
+                (range.get()->push_back(std::forward<decltype(items)>(items)), ...);
+            }, items);
+            return range;
+        };
+    }
+
+    template<typename F>
+    auto groupBy(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
+
+            using KeyType = typename std::invoke_result_t<F, T>::first_type;
+            using ValueType = typename std::invoke_result_t<F, T>::second_type;
+
+            std::unordered_map<KeyType, ValueType> map;
+
+            range | forEach([&map, &f](auto &&item) {
+                auto [key, value] = f(item);
+                map[std::move(key)] = std::move(value);
+            }) | sync();
+
+            return map;
+        };
+    }
+
+    template<typename F>
+    auto groupWith(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
+
+            using KeyType = typename std::invoke_result_t<F, T>;
+            using ValueType = T;
+
+            range | forEach([&map, &f](auto &&item) {
+                auto key = f(item);
+                map[std::move(key)] = std::move(item);
+            }) | sync();
+        };
+    }
+
+    template<typename F>
+    auto groupTo(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
+
+            using KeyType = T;
+            using ValueType = std::invoke_result_t<F, T>;
+
+            std::unordered_map<KeyType, ValueType> map;
+
+            range | forEach([&](auto &&item) {
+                auto value = f(item);
+                map[std::move(item)] = std::move(value);
+            }) | sync();
+
+            return map;
         };
     }
 
