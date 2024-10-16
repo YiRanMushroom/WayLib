@@ -17,5 +17,8 @@ add_executable(WayLib_Development
         WayLib/include/Util/FileSystem.hpp
         WayLib/include/Util/Exceptions.hpp
         WayLib/include/CRTP/inject_stream_traits.hpp
-        WayLib/include/Util/StringUtil.hpp
+        WayLib/include/Container/ThreadsafeQueue.hpp
+        WayLib/include/Util/ThreadPool.hpp
+        WayLib/include/Util/Range/Range.hpp
+        WayLib/include/Util/Range/RangeUtil.hpp
 )
