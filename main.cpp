@@ -6,11 +6,31 @@
 #include "Util/DataBuffer.hpp"
 #include "Util/FileSystem.hpp"
 #include "Util/StringLiteral.hpp"
+#include "Container/ThreadSafeQueue.hpp"
 
 void failedCode();
 
 int main() {
-    std::vector v{1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
+    std::unique_ptr<ThreadSafeQueue<std::function<void()> > > queue = std::make_unique<ThreadSafeQueue<std::function<
+        void()> > >();
+
+    std::jthread createTask{[&queue] {
+        std::vector v{1, 2, 3, 4, 5};
+        WayLib::Streamers::Of(v)
+                .forEach([&queue](int el) {
+                    std::cout << "writing " << el << std::endl;
+                    queue->emplace([el] {
+                        std::cout << el << ' ';
+                    });
+                });
+    }};
+
+    std::jthread processTask{[&queue] {
+        for (int i = 0; i < 5; ++i) {
+            queue->visit(WayLib::Utils::Invoke());
+        }
+    }};
+    /*std::vector v{1, 2, 3, 4, 5, 5, 7, 1, 2, 3, 4, 5, 5, 7};
     auto res =
             WayLib::Streamers::Of(v)
             .distinct()
@@ -122,63 +142,10 @@ int main() {
 
     lst.forEach([](int el) { std::cout << el << ' '; });
 
-    WayLib::StringLiteral strLit{"Hello, World!"};
+    WayLib::StringLiteral strLit{"Hello, World!"};*/
 }
 
 void failedCode() {
-    /*struct Int {
-        int val;
-
-        Int() = default;
-
-        int & operator++() {
-            return ++val;
-        }
-
-        Int(int val) : val(val) {}
-
-        bool operator==(const Int &rhs) const {
-            return val == rhs.val;
-        }
-
-        bool operator!=(const Int &rhs) const {
-            return !(rhs == *this);
-        }
-
-        bool operator<(const Int &rhs) const {
-            return val < rhs.val;
-        }
-
-        bool operator>(const Int &rhs) const {
-            return rhs < *this;
-        }
-
-        bool operator<=(const Int &rhs) const {
-            return !(rhs < *this);
-        }
-
-        bool operator>=(const Int &rhs) const {
-            return !(*this < rhs);
-        }
-
-        Int & operator=(const Int &rhs) {
-            val = rhs.val;
-            return *this;
-        }
-    };
-
-    std::map<Int, Int> mp1;
-
-    Int b = 0;
-
-    mp1[++b].operator=(++b);
-
-    Int c{};
-
-    std::map<Int, Int> mp2;
-
-    mp2[++c] = ++c;*/
-
     WayLib::DataBuffer buffer;
     buffer.read<int>();
 }

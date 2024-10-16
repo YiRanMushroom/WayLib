@@ -153,5 +153,11 @@ namespace WayLib {
                         .then([&] { os << std::endl; });
             };
         }
+
+        inline auto Invoke() {
+            return [](auto &&... args) {
+                return std::invoke(std::forward<decltype(args)>(args)...);
+            };
+        }
     }
 }
