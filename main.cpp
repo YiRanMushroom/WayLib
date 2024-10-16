@@ -26,13 +26,21 @@ int main() {
 
     // auto vector = range | WayLib::Ranges::collect(WayLib::Ranges::Collectors::ToVector());
 
-    auto res = (range | WayLib::Ranges::forEach([](int item) {
-        std::cout << item << std::endl;
-    }) | WayLib::Ranges::filter([](int item) {
-        return item % 2 == 0;
-    }) | WayLib::Ranges::map([](int item) {
-        return '+' + std::to_string(item * 2);
-    })) | WayLib::Ranges::collect(WayLib::Ranges::Collectors::ToVector());
+    auto res = std::move(range)
+               | WayLib::Ranges::forEach([](int item) {
+                   std::cout << item << std::endl;
+               }) | WayLib::Ranges::filter([](int item) {
+                   return item % 2 == 0;
+               }) | WayLib::Ranges::map([](int item) {
+                   return '+' + std::to_string(item * 2);
+               }) | WayLib::Ranges::typeDecay()
+               | WayLib::Ranges::forEach([](std::string &item) {
+                   std::cout << item << std::endl;
+               }) | WayLib::Ranges::discardLast()
+               | WayLib::Ranges::syncAndDecay()
+               | WayLib::Ranges::collect(WayLib::Ranges::Collectors::ToVector());
+
+    std::cout << typeid(res).name() << std::endl;
 
     auto bigNumber = pool.dispatch([]() {
         double result = 1;

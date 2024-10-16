@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(WayLib_Development)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 17)
 
 # Please add WayLib/include to your include path, like this, assuming your project is called _Example_Project_, and the WayLib directory is in the root directory (with CMakeLists.txt):
 # This is an example of how to include the header files in your source code.

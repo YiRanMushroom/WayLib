@@ -3,177 +3,125 @@
 #include <vector>
 
 namespace WayLib {
-    template<typename T>
+    template<typename T, typename R>
     class Range {
-        std::function<std::shared_ptr<std::vector<T> >()> m_Provider;
+        mutable R m_Parent;
+        mutable std::function<std::shared_ptr<std::vector<T> >(R &&)> m_Transformer;
         mutable std::shared_ptr<std::vector<T> > m_Cache;
 
     public:
         using value_type = T;
+        using parent_type = R; // R must have a get() method
 
-        const std::shared_ptr<std::vector<T> >& get() const {
+        const std::shared_ptr<std::vector<T> > &get() const {
             if (!m_Cache) {
-                m_Cache = m_Provider();
+                m_Cache = m_Transformer(std::move(m_Parent));
             }
             return m_Cache;
         }
 
-        const std::shared_ptr<std::vector<T> >& getNoCache() const {
-            return m_Cache = m_Provider();
+        const std::shared_ptr<std::vector<T> > &getNoCache() const {
+            return m_Cache = m_Transformer(std::move(m_Parent));
         }
 
-        explicit Range(std::function<std::shared_ptr<std::vector<T> >()> provider) : m_Provider(std::move(provider)) {}
+        explicit Range(R &&parent, std::function<std::shared_ptr<std::vector<T> >(R &&)> transformer)
+            : m_Parent(std::move(parent)), m_Transformer(std::move(transformer)) {
+        }
 
-        template<typename U>
-        Range(Range<U> &&other, std::function<std::shared_ptr<std::vector<T> >
-                  (Range<U> &&)> converter)
-            : m_Provider([provider = std::move(other.m_Provider), converter = std::move(converter)]() {
-                return std::invoke(converter, std::invoke(provider));
-            }) {}
+        explicit Range(const R &parent, std::function<std::shared_ptr<std::vector<T> >(R &&)> transformer)
+            : m_Parent(std::forward<decltype(parent)>(parent)), m_Transformer(std::move(transformer)) {
+        }
 
         Range(const Range &) = default;
 
         Range &operator=(const Range &) = default;
 
-        Range(Range &&other) noexcept: m_Provider(other.m_Provider) {}
+        Range(Range &&other) noexcept: m_Parent(std::move(other.m_Parent)), m_Transformer(other.m_Transformer) {
+        }
 
         Range &operator=(Range &&other) noexcept {
-            m_Provider = other.m_Provider;
+            m_Transformer = other.m_Transformer;
+            m_Parent = std::move(other.m_Parent);
             return *this;
         }
 
-        Range<T> copy() const {
-            return Range<T>(m_Provider);
+        const std::function<std::shared_ptr<std::vector<T> >(R &&)> &getTransformer() const {
+            return m_Transformer;
         }
+
+        const R &getParent() const {
+            return m_Parent;
+        }
+
+        virtual ~Range() = default;
     };
 
-    namespace Ranges {
-        struct ToRangeImplClass {
-            template<typename Container>
-            auto operator()(Container &&container) const {
-                using T = typename std::decay_t<Container>::value_type;
-                std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
-                vec->reserve(container.size());
-                for (auto &item: container) {
-                    if constexpr (std::is_rvalue_reference_v<decltype(container)>) {
-                        vec->push_back(std::move(item));
-                    } else {
-                        vec->push_back(item);
-                    }
-                }
-                return Range<T>([vec]() {
-                    return vec;
-                });
+    template<typename T>
+    class Range<T, void> {
+    public:
+        using value_type = T;
+        std::function<std::shared_ptr<std::vector<T> >()> m_Transformer;
+        mutable std::shared_ptr<std::vector<T> > m_Cache;
+
+        const std::shared_ptr<std::vector<T> > &get() const {
+            if (!m_Cache) {
+                m_Cache = m_Transformer();
             }
-        };
-
-        inline auto toRange() {
-            static ToRangeImplClass instance;
-            return instance;
+            return m_Cache;
         }
 
-        auto collect(auto &&collector) {
-            return [collector = std::forward<decltype(collector)>(collector)](auto &&range) {
-                return std::invoke(collector, std::forward<decltype(range)>(range));
-            };
+        const std::shared_ptr<std::vector<T> > &getNoCache() const {
+            return m_Cache = m_Transformer();
         }
 
-        auto forEach(auto &&visitor) {
-            return [visitor = std::forward<decltype(visitor)>(visitor)](auto &&range) {
-                using T = typename std::decay_t<decltype(range)>::value_type;
-
-                return Range<T>{
-                    [range = std::forward<decltype(range)>(range), visitor]() {
-                        for (auto &item: *range.get()) {
-                            std::invoke(visitor, item);
-                        }
-                        return range.get();
-                    }
-                };
-            };
+        explicit Range(std::function<std::shared_ptr<std::vector<T> >()> transformer)
+            : m_Transformer(std::move(transformer)) {
         }
 
-        auto filter(auto predicate) {
-            return [predicate = std::move(predicate)](auto &&range) {
-                using T = typename std::decay_t<decltype(range)>::value_type;
-                return Range<T>{
-                    [range = std::forward<decltype(range)>(range), predicate]() {
-                        std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
-                        for (auto &item: *range.get()) {
-                            if (std::invoke(predicate, item)) {
-                                vec->push_back(std::move(item));
-                            }
-                        }
-                        return vec;
-                    }
-                };
-            };
+        Range(const Range &) = default;
+
+        Range &operator=(const Range &) = default;
+
+        Range(Range &&other) noexcept: m_Transformer(other.m_Transformer) {
         }
 
-        auto map(auto transformer) {
-            return [transformer = std::move(transformer)](auto &&range) {
-                using T = typename std::decay_t<decltype(range)>::value_type;
-                using U = std::remove_reference_t<std::invoke_result_t<decltype(transformer), T> >;
-                return Range<U>{
-                    [range = std::forward<decltype(range)>(range), transformer]() {
-                        std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
-
-                        for (auto&& data = range.get(); auto &item: *data.get()) {
-                            vec->push_back(std::invoke(transformer, item));
-                        }
-
-                        return vec;
-                    }
-                };
-            };
+        Range &operator=(Range &&other) noexcept {
+            m_Transformer = other.m_Transformer;
+            return *this;
         }
 
-        auto let(auto &&visitor) {
-            return [visitor = std::forward<decltype(visitor)>(visitor)](auto &&range) -> decltype(auto) {
-                visitor(std::forward<decltype(range)>(range));
-                return std::forward<decltype(range)>(range);
-            };
+        const std::function<std::shared_ptr<std::vector<T> >()> &getTransformer() const {
+            return m_Transformer;
         }
-
-        auto then(auto &&action) {
-            return [action = std::forward<decltype(action)>(action)](auto &&range) -> decltype(auto) {
-                action();
-                return std::forward<decltype(range)>(range);
-            };
-        }
-
-        inline auto evaluate() {
-            return [](auto &&range) {
-                return range.get();
-            };
-        }
-
-        namespace Collectors {}
-    }
+    };
 }
 
-template<typename T>
-auto operator|(WayLib::Range<T> &&range, auto &&converter) {
-    return std::invoke(converter, std::move(range));
+template<typename T, typename R, typename Convertor>
+auto operator|(WayLib::Range<T, R> &&range, Convertor &&converter) {
+    return converter(std::move(range));
 }
 
-template<typename T>
-auto operator|(const WayLib::Range<T> &range, auto &&converter) {
-    return std::invoke(converter, range);
+template<typename T, typename R, typename Convertor>
+auto operator|(const WayLib::Range<T, R> &range, Convertor &&converter) {
+    return converter(range);
 }
 
 template<typename T, typename F,
-    std::enable_if_t<std::is_same_v<std::invoke_result_t<F, std::vector<T> &&>, WayLib::Range<T> >, int>  = 0>
-auto operator|(std::vector<T> &&vec, F &&converter) {
-    return WayLib::Range<T>{
-        std::invoke(converter, std::move(vec))
+    std::enable_if_t<std::is_same_v<std::invoke_result_t<F, std::vector<T> &&>, WayLib::Range<T, void> >, int>  = 0>
+auto operator|(std::vector<T> &&vec, F converter) {
+    return WayLib::Range<T, void>{
+        [vec = std::forward<decltype(vec)>, converter = std::move(converter)] {
+            return converter(std::move(vec));
+        }
     };
 }
 
 template<typename T, typename F,
-    std::enable_if_t<std::is_same_v<std::invoke_result_t<F, const std::vector<T> &>, WayLib::Range<T> >, int>  = 0>
+    std::enable_if_t<std::is_same_v<std::invoke_result_t<F, const std::vector<T> &>, WayLib::Range<T, void> >, int>  =
+            0>
 auto operator|(const std::vector<T> &vec, F &&converter) {
-    return WayLib::Range<T>{
+    return WayLib::Range<T, void>{
         std::invoke(converter, vec)
     };
 }
+

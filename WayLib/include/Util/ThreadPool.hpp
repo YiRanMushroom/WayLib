@@ -72,11 +72,13 @@ namespace WayLib {
             return future;
         }
 
-        void dispatchDetached(auto... args) {
+        template<typename... Args>
+        void dispatchDetached(Args&&... args) {
             dispatch(std::forward<decltype(args)>(args)...);
         }
 
-        auto dispatchBlocked(auto... args) {
+        template<typename... Args>
+        auto dispatchBlocked(Args&&... args) {
             return dispatch(std::forward<decltype(args)>(args)...).get();
         }
 
@@ -89,11 +91,13 @@ namespace WayLib {
             return instance;
         }
 
-        static auto Async(auto &&... args) {
+        template<typename... Args>
+        static auto Async(Args &&... args) {
             return GlobalInstance().dispatch(std::forward<decltype(args)>(args)...);
         }
 
-        static void AsyncDetached(auto &&... args) {
+        template<typename... Args>
+        static void AsyncDetached(Args &&... args) {
             GlobalInstance().dispatchDetached(std::forward<decltype(args)>(args)...);
         }
 
