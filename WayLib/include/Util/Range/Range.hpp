@@ -6,12 +6,20 @@ namespace WayLib {
     template<typename T>
     class Range {
         std::function<std::shared_ptr<std::vector<T> >()> m_Provider;
+        mutable std::shared_ptr<std::vector<T> > m_Cache;
 
     public:
         using value_type = T;
 
-        std::shared_ptr<std::vector<T>> get() const {
-            return std::invoke(m_Provider);
+        const std::shared_ptr<std::vector<T> >& get() const {
+            if (!m_Cache) {
+                m_Cache = m_Provider();
+            }
+            return m_Cache;
+        }
+
+        const std::shared_ptr<std::vector<T> >& getNoCache() const {
+            return m_Cache = m_Provider();
         }
 
         explicit Range(std::function<std::shared_ptr<std::vector<T> >()> provider) : m_Provider(std::move(provider)) {}
@@ -110,9 +118,7 @@ namespace WayLib {
                     [range = std::forward<decltype(range)>(range), transformer]() {
                         std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
 
-                        auto data = range.get();
-
-                        for (auto &item: *data) {
+                        for (auto&& data = range.get(); auto &item: *data.get()) {
                             vec->push_back(std::invoke(transformer, item));
                         }
 
