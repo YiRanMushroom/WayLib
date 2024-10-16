@@ -7,7 +7,15 @@ namespace WayLib::Ranges {
         template<typename Container>
         auto operator()(Container &&container) const {
             using T = typename std::decay_t<Container>::value_type;
+
+            if constexpr (std::is_same_v<Container, std::vector<T> &&>) {
+                return Range<T, void>([data = std::forward<Container>(container)]() {
+                    return std::make_shared<std::vector<T> >(std::move(data));
+                });
+            }
+
             std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
+
             vec->reserve(container.size());
             for (auto &item: container) {
                 if constexpr (std::is_rvalue_reference_v<decltype(container)>) {

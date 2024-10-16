@@ -24,8 +24,6 @@ int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
     auto range = vec | WayLib::Ranges::toRange();
 
-    // auto vector = range | WayLib::Ranges::collect(WayLib::Ranges::Collectors::ToVector());
-
     auto res = std::move(range)
                | WayLib::Ranges::forEach([](int item) {
                    std::cout << item << std::endl;
