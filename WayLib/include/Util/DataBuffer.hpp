@@ -130,11 +130,12 @@ namespace WayLib {
 
         void checkSize(_declself_, size_t size) {
             if (_self_.m_ReadIndex + size > _self_.m_Data.size()) {
-                throw BufferOverflowException("DataBuffer overflow after checking, requested size: " + std::to_string(size) +
-                                              ", available size: " + std::to_string(
-                                                  _self_.m_Data.size() - _self_.m_ReadIndex) + std::string(", read index: ") +
-                                                      std::to_string(_self_.m_ReadIndex))
-                .pushOptionalData("DataBuffer", std::make_shared<DataBuffer>(_self_.move()));
+                throw BufferOverflowException(
+                            "DataBuffer overflow after checking, requested size: " + std::to_string(size) +
+                            ", available size: " + std::to_string(
+                                _self_.m_Data.size() - _self_.m_ReadIndex) + std::string(", read index: ") +
+                            std::to_string(_self_.m_ReadIndex))
+                        .pushOptionalData("DataBuffer", std::make_shared<DataBuffer>(_self_.move()));
             }
         }
 
@@ -357,15 +358,17 @@ namespace WayLib {
     // std::shared_ptr
 
     template<typename T>
-    inline void WriteBufferImpl(DataBuffer &buffer, const std::shared_ptr<T> &data) {
-        buffer.write(data.get());
-    }
+    inline void WriteBufferImpl(DataBuffer &buffer, const std::shared_ptr<T> &data) = delete;
+
+    // write a shared_ptr does not logically make sense
 
     template<typename T>
-    inline void ReadBufferImpl(DataBuffer &buffer, std::shared_ptr<T> &ref) {
-        ref = std::make_shared<T>(buffer.read<T>());
-    }
+    inline void ReadBufferImpl(DataBuffer &buffer, std::shared_ptr<T> &ref) = delete;
+
+    // read a shared_ptr does not logically make sense
 }
+
+// operators
 
 inline WayLib::DataBuffer &operator<<(WayLib::DataBuffer &buffer, const auto &data) {
     buffer.write(_forward_(data));
@@ -387,5 +390,4 @@ inline WayLib::DataBuffer &&operator>>(WayLib::DataBuffer &&buffer, auto &data) 
     return std::move(buffer);
 }
 
-// operators
 #include "Macro/UndefWayMacro.hpp"
