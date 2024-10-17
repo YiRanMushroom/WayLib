@@ -38,6 +38,7 @@ int main() {
                   | WayLib::Ranges::map([](int item) {
                       return '+' + std::to_string(item * 2);
                   })
+
                   | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
                   | WayLib::Ranges::append("hello", "world")
                   | WayLib::Ranges::asyncSync();

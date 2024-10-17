@@ -57,6 +57,18 @@ namespace WayLib {
         }
 
         ~Range() = default;
+
+        auto begin() const {
+            return get()->begin();
+        }
+
+        auto end() const {
+            return get()->end();
+        }
+
+        auto size() const {
+            return get()->size();
+        }
     };
 
     template<typename T>
@@ -98,6 +110,18 @@ namespace WayLib {
         }
 
         ~Range() = default;
+
+        auto begin() const {
+            return get()->begin();
+        }
+
+        auto end() const {
+            return get()->end();
+        }
+
+        auto size() const {
+            return get()->size();
+        }
     };
 
     namespace Ranges {
@@ -122,7 +146,7 @@ namespace WayLib {
         inline auto autoSync() {
             return [](auto &&range) {
                 if constexpr (!IsRangeV<std::decay_t<decltype(range)> >) {
-                    return range;
+                    return std::move(range);
                 } else {
                     if (alwaysSync)
                         return sync()(std::forward<decltype(range)>(range));
