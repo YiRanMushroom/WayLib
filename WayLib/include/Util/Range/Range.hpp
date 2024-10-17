@@ -24,9 +24,9 @@ namespace WayLib {
             return m_Cache;
         }
 
-        /*const std::shared_ptr<std::vector<T> > &getNoCache() const {
+        const std::shared_ptr<std::vector<T> > &getNoCache() const {
             return m_Cache = m_Transformer(std::move(m_Parent));
-        }*/
+        }
 
         explicit Range(R &&parent, std::function<std::shared_ptr<std::vector<T> >(R &&)> transformer)
             : m_Parent(std::move(parent)), m_Transformer(std::move(transformer)) {}
@@ -38,11 +38,13 @@ namespace WayLib {
 
         Range &operator=(const Range &) = default;
 
-        Range(Range &&other) noexcept: m_Parent(std::move(other.m_Parent)), m_Transformer(other.m_Transformer) {}
+        Range(Range &&other) noexcept: m_Parent(std::move(other.m_Parent)), m_Transformer(other.m_Transformer),
+                                       m_Cache(other.m_Cache) {}
 
         Range &operator=(Range &&other) noexcept {
             m_Transformer = other.m_Transformer;
-            m_Parent = std::move(other.m_Parent);
+            m_Parent = other.m_Parent;
+            m_Cache = other.m_Cache;
             return *this;
         }
 
@@ -83,10 +85,11 @@ namespace WayLib {
 
         Range &operator=(const Range &) = default;
 
-        Range(Range &&other) noexcept: m_Transformer(other.m_Transformer) {}
+        Range(Range &&other) noexcept: m_Transformer(other.m_Transformer), m_Cache(other.m_Cache) {}
 
         Range &operator=(Range &&other) noexcept {
             m_Transformer = other.m_Transformer;
+            m_Cache = other.m_Cache;
             return *this;
         }
 

@@ -37,13 +37,7 @@ int main() {
                    return '+' + std::to_string(item * 2);
                })
                | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
-               | WayLib::Ranges::forEach([](std::string &item) {
-                   // std::cout << item << std::endl;
-               })
-               | WayLib::Ranges::forEach([](std::string &item) {}) | WayLib::Ranges::append("hello", "world")
-               | WayLib::Ranges::forEach([](std::string &item) {
-                   // std::cout << item << std::endl;
-               }) | WayLib::Ranges::sync();
+               | WayLib::Ranges::append("hello", "world");
 
 
     // auto next = (*res.get());
@@ -55,7 +49,7 @@ int main() {
     res | WayLib::Ranges::forEach([&](std::string &item) {
         std::cout << item << std::endl;
         vec2.push_back(item);
-    }) |WayLib::Ranges::sync();
+    }) | WayLib::Ranges::sync();
 
     std::cout << "Result: " << typeid(res).name() << std::endl;
 
