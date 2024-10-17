@@ -188,7 +188,7 @@ auto operator|(const WayLib::Range<T, R> &range, Convertor &&converter) {
 
 template<typename T, typename F,
     std::enable_if_t<std::is_same_v<std::invoke_result_t<F, std::vector<T> &&>, WayLib::Range<T, void> >, int>  = 0>
-auto operator|(std::vector<T> &&vec, F converter) {
+auto operator|(std::vector<T> &&vec, F&& converter) {
     return converter(std::move(vec)) | WayLib::Ranges::autoSync();
 }
 

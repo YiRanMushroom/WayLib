@@ -3,6 +3,7 @@
 #include "Range.hpp"
 #include "Util/TypeTraits.hpp"
 
+#include <vector>
 #include <unordered_map>
 
 namespace WayLib::Ranges {
@@ -10,6 +11,16 @@ namespace WayLib::Ranges {
         inline auto ToVector() {
             return [](auto &&range) {
                 return *range.get();
+            };
+        }
+
+        inline auto ToString() {
+            return [](auto &&range) {
+                std::string result;
+                for (auto &item: *range.get()) {
+                    result += item;
+                }
+                return result;
             };
         }
     }
@@ -68,7 +79,6 @@ namespace WayLib::Ranges {
             return Range<T, ParentType>(
                 std::forward<decltype(range)>(range),
                 [visitor](auto &&range) {
-
                     for (auto &item: *range.get()) {
                         std::invoke(visitor, item);
                     }
@@ -190,7 +200,7 @@ namespace WayLib::Ranges {
 
             return Range<T, ParentType>{
                 std::forward<decltype(range)>(range),
-                [other = std::make_shared<std::vector<T>>(std::move(content))](auto &&range) {
+                [other = std::make_shared<std::vector<T> >(std::move(content))](auto &&range) {
                     auto data = *range.get();
                     for (auto &item: *other) {
                         data.push_back(std::move(item));
@@ -278,5 +288,105 @@ namespace WayLib::Ranges {
         };
     }
 
+    template<typename... Ts>
+    auto split(Ts &&... s) {
+        return [separators = std::make_tuple(std::forward<Ts>(s)...)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
 
+            return Range<std::vector<T>, ParentType>{
+                std::forward<decltype(range)>(range),
+                [separators = std::move(separators)](auto &&range) {
+                    std::vector<std::vector<T> > result;
+                    auto data = *range.get();
+                    std::vector<T> current;
+                    for (auto &item: data) {
+                        bool found = false;
+                        std::apply([&](auto &&... separators) {
+                            ((found |= item == separators), ...);
+                        }, separators);
+
+                        if (found) {
+                            if (!current.empty()) {
+                                result.push_back(std::move(current));
+                                current.clear();
+                            }
+                        } else {
+                            current.push_back(std::move(item));
+                        }
+                    }
+
+                    if (!current.empty()) {
+                        result.push_back(std::move(current));
+                    }
+
+                    return std::make_shared<std::vector<std::vector<T> > >(std::move(result));
+                }
+            };
+        };
+    }
+
+    template<typename F>
+    inline auto flatMap(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
+
+            using U = typename std::invoke_result_t<F, T>::value_type;
+            return Range<U, ParentType>{
+                std::forward<decltype(range)>(range),
+                [f](auto &&range) {
+                    std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
+                    for (auto &item: *range.get()) {
+                        auto result = std::invoke(f, item);
+                        for (auto &innerItem: result) {
+                            vec->push_back(std::move(innerItem));
+                        }
+                    }
+                    return vec;
+                }
+            };
+        };
+    }
+
+    namespace Mapper {
+        inline auto Add() {
+            return [](auto &&container) {
+                using OperandType = typename std::decay_t<decltype(container)>::value_type;
+                using ResultType = decltype(std::declval<OperandType>() + std::declval<OperandType>());
+                ResultType result{};
+                for (auto &item: container) {
+                    result += item;
+                }
+                return result;
+            };
+        }
+
+        inline auto CharVectorToString() {
+            return [](auto &&container) {
+                std::string result;
+                result.reserve(container.size());
+                for (auto &item: container) {
+                    result += item;
+                }
+                return result;
+            };
+        }
+
+        inline auto ToString() {
+            return [](auto &&container) {
+                return std::to_string(container);
+            };
+        }
+    }
+}
+
+template<typename F>
+auto operator|(std::string &&str, F &&converter) {
+    return converter(std::move(str)) | WayLib::Ranges::autoSync();
+}
+
+template<typename F>
+auto operator|(const std::string &str, F &&converter) {
+    return converter(str) | WayLib::Ranges::autoSync();
 }
