@@ -143,6 +143,12 @@ namespace WayLib {
                 return ThreadPool::Async(syncAsUniquePtr(), std::forward<decltype(range)>(range));
             };
         }
+
+        inline auto move() {
+            return [](auto &&range) {
+                return std::move(range);
+            };
+        }
     }
 }
 

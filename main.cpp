@@ -28,16 +28,17 @@ int main() {
         return std::to_string(item);
     });
 
-    auto res = std::move(range)
+    auto res = range | WayLib::Ranges::move()
                | WayLib::Ranges::forEach([](int item) {
-                   // std::cout << item << std::endl;
+                   std::cout << item << std::endl;
                }) | WayLib::Ranges::filter([](int item) {
                    return item % 2 == 0;
                }) | WayLib::Ranges::map([](int item) {
                    return '+' + std::to_string(item * 2);
                })
                | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
-               | WayLib::Ranges::append("hello", "world");
+               | WayLib::Ranges::append("hello", "world")
+               | WayLib::Ranges::sync();
 
 
     // auto next = (*res.get());
