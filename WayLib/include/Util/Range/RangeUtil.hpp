@@ -330,6 +330,7 @@ namespace WayLib::Ranges {
 
     template<typename F>
     inline auto flatMap(F &&f) {
+
         return [f = std::forward<F>(f)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = std::decay_t<decltype(range)>;
@@ -337,6 +338,7 @@ namespace WayLib::Ranges {
             using U = typename std::invoke_result_t<F, T>::value_type;
             return Range<U, ParentType>{
                 std::forward<decltype(range)>(range),
+
                 [f = std::move(f)](auto &&range) {
                     std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
                     for (auto &item: *range.get()) {
@@ -347,6 +349,7 @@ namespace WayLib::Ranges {
                     }
                     return vec;
                 }
+
             };
         };
     }
