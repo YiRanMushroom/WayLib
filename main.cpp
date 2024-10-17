@@ -52,6 +52,8 @@ int main() {
                 return std::vector{str, str + "1", str + "2"};
             }) | WayLib::Ranges::forEach([](const std::string &str) {
                 std::cout << str << std::endl;
+            }) | WayLib::Ranges::sorted() | WayLib::Ranges::forEach([](const std::string &str) {
+                std::cout << str << std::endl;
             }) | WayLib::Ranges::sync();
 
     std::cout << "======================\n" << std::endl;

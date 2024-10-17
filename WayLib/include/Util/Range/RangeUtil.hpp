@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Range.hpp"
 #include "Util/TypeTraits.hpp"
 
@@ -335,7 +337,7 @@ namespace WayLib::Ranges {
             using U = typename std::invoke_result_t<F, T>::value_type;
             return Range<U, ParentType>{
                 std::forward<decltype(range)>(range),
-                [f](auto &&range) {
+                [f = std::move(f)](auto &&range) {
                     std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
                     for (auto &item: *range.get()) {
                         auto result = std::invoke(f, item);
@@ -347,6 +349,73 @@ namespace WayLib::Ranges {
                 }
             };
         };
+    }
+
+    template<typename F>
+    inline auto firstMatch(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            std::optional<typename decltype(range)::value_type> result;
+            for (auto &item: *range.get()) {
+                if (std::invoke(f, item)) {
+                    result = item;
+                    break;
+                }
+            }
+            return result;
+        };
+    }
+
+    template<typename F>
+    inline auto anyMatch(F &&f) {
+        return firstMatch(std::forward<F>(f));
+    }
+
+    template<typename F>
+    inline auto sortedWith(F &&f) {
+        return [f = std::forward<F>(f)](auto &&range) {
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = std::decay_t<decltype(range)>;
+
+            // return std::make_shared<std::vector<T> >(std::move(data));
+            return Range<T, ParentType>{
+                std::forward<decltype(range)>(range),
+                [f = std::move(f)](auto &&range) {
+                    auto data = *range.get();
+                    std::sort(data.begin(), data.end(), f);
+                    return std::make_shared<std::vector<T> >(std::move(data));
+                }
+            };
+        };
+    }
+
+    template<typename F>
+    inline auto sortedBy(F &&f) {
+        return sortedWith([f = std::forward<F>(f)](const auto &lhs, const auto &rhs) {
+            return f(lhs) < f(rhs);
+        });
+    }
+
+    template<typename F>
+    inline auto sortedByDescending(F &&f) {
+        return sortedWith([f = std::forward<F>(f)](const auto &lhs, const auto &rhs) {
+            return f(lhs) > f(rhs);
+        });
+    }
+
+    inline auto sorted() {
+        return sortedWith(
+            [](const auto &lhs, const auto &rhs) {
+                return lhs < rhs;
+            }
+        );
+    }
+
+    inline auto sortedDescending() {
+        return sortedWith(
+            [](const auto &lhs, const auto &rhs) {
+                return lhs > rhs;
+            }
+        );
     }
 
     namespace Mapper {
