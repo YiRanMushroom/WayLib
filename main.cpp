@@ -35,23 +35,43 @@ int main() {
                    return item % 2 == 0;
                }) | WayLib::Ranges::map([](int item) {
                    return '+' + std::to_string(item * 2);
-               }) | WayLib::Ranges::typeDecay()
-               | WayLib::Ranges::forEach([](std::string &item) {
-               }) | WayLib::Ranges::discardLast()
-               | WayLib::Ranges::syncAndDecay()
+               })
                | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
                | WayLib::Ranges::forEach([](std::string &item) {
-               }) | WayLib::Ranges::concat(rg)
+                   // std::cout << item << std::endl;
+               })
+               | WayLib::Ranges::forEach([](std::string &item) {}) | WayLib::Ranges::append("hello", "world")
                | WayLib::Ranges::forEach([](std::string &item) {
-               }) | WayLib::Ranges::append("hello", "world")
-               | WayLib::Ranges::forEach([](std::string &item) {
-                   std::cout << item << std::endl;
-               }) | WayLib::Ranges::sync()
-               | WayLib::Ranges::groupTo([](std::string &item) {
-                   return item.size();
-               });
+                   // std::cout << item << std::endl;
+               }) | WayLib::Ranges::sync();
 
-    auto bigNumber = pool.dispatch([]() {
+
+    // auto next = (*res.get());
+
+    std::cout << "======================\n" << std::endl;
+
+    std::vector<std::string> vec2;
+
+    res | WayLib::Ranges::forEach([&](std::string &item) {
+        std::cout << item << std::endl;
+        vec2.push_back(item);
+    }) |WayLib::Ranges::sync();
+
+    std::cout << "Result: " << typeid(res).name() << std::endl;
+
+    /*std::vector{1, 2, 3, 4, 5} | WayLib::Ranges::toRange() | WayLib::Ranges::filter([](int item) {
+        return item % 2 == 0;
+    }) | WayLib::Ranges::map([](int item) {
+        return '+' + std::to_string(item * 2);
+    })
+    | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
+
+    | WayLib::Ranges::forEach([](auto&& item) {
+        std::cout << item << std::endl;
+    }) | WayLib::Ranges::sync();*/
+
+
+    /*auto bigNumber = pool.dispatch([]() {
         double result = 1;
         for (int i = 1; i <= 100; ++i) {
             result *= i;
@@ -60,7 +80,7 @@ int main() {
     });
 
     auto result = bigNumber.get();
-    std::cout << "Result: " << result << std::endl;
+    std::cout << "Result: " << result << std::endl;*/
 }
 
 void failedCode() {}

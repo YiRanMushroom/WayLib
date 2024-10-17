@@ -6,8 +6,6 @@
 #include <unordered_map>
 
 namespace WayLib::Ranges {
-
-
     struct ToRangeImplClass {
         template<typename Container>
         auto operator()(Container &&container) const {
@@ -62,9 +60,11 @@ namespace WayLib::Ranges {
             return Range<T, ParentType>(
                 std::forward<decltype(range)>(range),
                 [visitor](auto &&range) {
+
                     for (auto &item: *range.get()) {
                         std::invoke(visitor, item);
                     }
+
                     return range.get();
                 });
         };
@@ -167,21 +167,38 @@ namespace WayLib::Ranges {
     template<typename Container>
     auto concat(Container &&container) {
         return [other = container | toRange()](auto &&range) {
-            other | forEach([&range](auto &&item) {
-                range.get()->push_back(std::forward<decltype(item)>(item));
-            }) | sync();
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = typename std::decay_t<decltype(range)>;
 
-            return range;
+            auto content = *range.get();
+
+            return Range<T, ParentType>{
+                std::forward<decltype(range)>(range),
+                [other = std::make_shared<std::vector<T>>(std::move(content))](auto &&range) {
+                    auto data = *range.get();
+                    data.insert(data.end(), other->begin(), other->end());
+                    return std::make_shared<std::vector<T> >(std::move(data));
+                }
+            };
         };
     }
 
     template<typename... Ts>
     auto append(Ts &&... items) {
         return [items = std::make_tuple(std::forward<Ts>(items)...)](auto &&range) {
-            std::apply([&range](auto &&... items) {
-                (range.get()->push_back(std::forward<decltype(items)>(items)), ...);
-            }, items);
-            return range;
+            using T = typename std::decay_t<decltype(range)>::value_type;
+            using ParentType = typename std::decay_t<decltype(range)>;
+
+            return Range<T, ParentType>{
+                std::forward<decltype(range)>(range),
+                [items = std::move(items)](auto &&range) {
+                    auto data = *range.get();
+                    std::apply([&data](auto &&... items) {
+                        (data.push_back(std::forward<decltype(items)>(items)), ...);
+                    }, items);
+                    return std::make_shared<std::vector<T> >(std::move(data));
+                }
+            };
         };
     }
 

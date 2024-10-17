@@ -24,9 +24,9 @@ namespace WayLib {
             return m_Cache;
         }
 
-        const std::shared_ptr<std::vector<T> > &getNoCache() const {
+        /*const std::shared_ptr<std::vector<T> > &getNoCache() const {
             return m_Cache = m_Transformer(std::move(m_Parent));
-        }
+        }*/
 
         explicit Range(R &&parent, std::function<std::shared_ptr<std::vector<T> >(R &&)> transformer)
             : m_Parent(std::move(parent)), m_Transformer(std::move(transformer)) {}
@@ -54,7 +54,7 @@ namespace WayLib {
             return m_Parent;
         }
 
-        virtual ~Range() = default;
+        ~Range() = default;
     };
 
     template<typename T>
@@ -93,6 +93,8 @@ namespace WayLib {
         const std::function<std::shared_ptr<std::vector<T> >()> &getTransformer() const {
             return m_Transformer;
         }
+
+        ~Range() = default;
     };
 
     namespace Ranges {
@@ -125,34 +127,41 @@ namespace WayLib {
                 }
             };
         }
+
+        inline auto syncAsUniquePtr() {
+            return [](auto &&range) {
+                auto res = *range.get();
+                return std::make_unique<std::decay_t<decltype(range)> >(std::forward<decltype(range)>(range));
+            };
+        }
+
+        inline auto asyncSync() {
+            return [](auto &&range) {
+                return ThreadPool::Async(syncAsUniquePtr(), std::forward<decltype(range)>(range));
+            };
+        }
     }
 }
 
 template<typename T, typename R, typename Convertor>
 auto operator|(WayLib::Range<T, R> &&range, Convertor &&converter) {
-    return WayLib::Ranges::autoSync()(converter(std::move(range)));
+    return WayLib::Ranges::autoSync()(converter(range));
 }
 
 template<typename T, typename R, typename Convertor>
 auto operator|(const WayLib::Range<T, R> &range, Convertor &&converter) {
-    return WayLib::Ranges::autoSync()(converter(std::move(range)));
+    return WayLib::Ranges::autoSync()(converter(range));
 }
 
 template<typename T, typename F,
     std::enable_if_t<std::is_same_v<std::invoke_result_t<F, std::vector<T> &&>, WayLib::Range<T, void> >, int>  = 0>
 auto operator|(std::vector<T> &&vec, F converter) {
-    return WayLib::Range<T, void>{
-               [vec = std::forward<decltype(vec)>, converter = std::move(converter)] {
-                   return converter(std::move(vec));
-               }
-           } | WayLib::Ranges::autoSync();
+    return converter(std::move(vec)) | WayLib::Ranges::autoSync();
 }
 
 template<typename T, typename F,
     std::enable_if_t<std::is_same_v<std::invoke_result_t<F, const std::vector<T> &>, WayLib::Range<T, void> >, int>  =
             0>
 auto operator|(const std::vector<T> &vec, F &&converter) {
-    return WayLib::Range<T, void>{
-        std::invoke(converter, vec)
-    } | WayLib::Ranges::autoSync();
+    return converter(vec) | WayLib::Ranges::autoSync();
 }
