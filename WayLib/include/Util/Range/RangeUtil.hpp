@@ -6,6 +6,14 @@
 #include <unordered_map>
 
 namespace WayLib::Ranges {
+    namespace Collectors {
+        inline auto ToVector() {
+            return [](auto &&range) {
+                return *range.get();
+            };
+        }
+    }
+
     struct ToRangeImplClass {
         template<typename Container>
         auto operator()(Container &&container) const {
@@ -166,11 +174,15 @@ namespace WayLib::Ranges {
 
     template<typename Container>
     auto concat(Container &&container) {
-        return [other = container | toRange()](auto &&range) {
+        return [other = (container | toRange())](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = typename std::decay_t<decltype(range)>;
 
-            auto content = *range.get();
+            std::vector<T> content;
+
+            other | forEach([&content](auto &&item) {
+                content.push_back(std::move(item));
+            }) | sync();
 
             return Range<T, ParentType>{
                 std::forward<decltype(range)>(range),
@@ -258,11 +270,5 @@ namespace WayLib::Ranges {
         };
     }
 
-    namespace Collectors {
-        inline auto ToVector() {
-            return [](auto &&range) {
-                return *range.get();
-            };
-        }
-    }
+
 }

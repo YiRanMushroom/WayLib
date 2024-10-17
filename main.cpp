@@ -26,33 +26,37 @@ int main() {
 
     WayLib::Range rg = range | WayLib::Ranges::toRange() | WayLib::Ranges::map([](int item) {
         return std::to_string(item);
-    });
+    }) | WayLib::Ranges::discardLast();
 
-    auto res = range | WayLib::Ranges::move()
-               | WayLib::Ranges::forEach([](int item) {
-                   std::cout << item << std::endl;
-               }) | WayLib::Ranges::filter([](int item) {
-                   return item % 2 == 0;
-               }) | WayLib::Ranges::map([](int item) {
-                   return '+' + std::to_string(item * 2);
-               })
-               | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
-               | WayLib::Ranges::append("hello", "world")
-               | WayLib::Ranges::sync();
+    auto future = range | WayLib::Ranges::move()
+                  | WayLib::Ranges::forEach([](int item) {
+                      std::cout << item << std::endl;
+                  })
+                  | WayLib::Ranges::filter([](int item) {
+                      return item % 2 == 0;
+                  })
+                  | WayLib::Ranges::map([](int item) {
+                      return '+' + std::to_string(item * 2);
+                  })
+                  | WayLib::Ranges::concat(std::vector{"a", "b", "c"})
+                  | WayLib::Ranges::append("hello", "world")
+                  | WayLib::Ranges::asyncSync();
 
 
-    // auto next = (*res.get());
+    auto next = (*future.get());
 
     std::cout << "======================\n" << std::endl;
 
-    std::vector<std::string> vec2;
+    std::vector<std::string> vec2 = next | WayLib::Ranges::move() | WayLib::Ranges::collect(
+                                        WayLib::Ranges::Collectors::ToVector());
 
-    res | WayLib::Ranges::forEach([&](std::string &item) {
-        std::cout << item << std::endl;
-        vec2.push_back(item);
-    }) | WayLib::Ranges::sync();
+    for (const auto &item: vec2) {
+        std::cout << item << " ";
+    }
 
-    std::cout << "Result: " << typeid(res).name() << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "Result: " << typeid(future).name() << std::endl;
 
     /*std::vector{1, 2, 3, 4, 5} | WayLib::Ranges::toRange() | WayLib::Ranges::filter([](int item) {
         return item % 2 == 0;
