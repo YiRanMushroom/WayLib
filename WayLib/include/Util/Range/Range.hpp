@@ -3,6 +3,11 @@
 #include <vector>
 
 namespace WayLib {
+    template<typename T>
+    inline auto fakeDeleter() {
+        return [](std::decay_t<T> *) {};
+    }
+
     namespace Ranges {
         inline bool alwaysSync = false;
     }

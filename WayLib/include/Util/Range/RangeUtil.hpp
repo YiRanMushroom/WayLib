@@ -66,6 +66,17 @@ namespace WayLib::Ranges {
         return instance;
     }
 
+    inline auto asRangeNoOwnership() {
+        return [](const auto &vec) {
+            using T = typename std::decay_t<decltype(vec)>::value_type;
+            return Range<T, void>{
+                [ptr = std::shared_ptr<std::vector<T> >(const_cast<std::vector<T> *>(&vec), fakeDeleter<std::vector<T>>())]() {
+                    return ptr;
+                }
+            };
+        };
+    }
+
     template<typename Collector>
     auto collect(Collector collector) {
         return [collector = std::move(collector)](auto &&range) {
@@ -100,13 +111,16 @@ namespace WayLib::Ranges {
             return Range<T, ParentType>{
                 std::forward<decltype(range)>(range),
                 [predicate](auto &&range) {
-                    std::shared_ptr<std::vector<T> > vec = std::make_shared<std::vector<T> >();
-                    for (auto &item: *range.get()) {
-                        if (std::invoke(predicate, item)) {
-                            vec->push_back(std::move(item));
+                    auto originalRef = *range.get();
+                    size_t checkIdx{}, writeIdx{};
+                    for (; checkIdx < originalRef.size(); ++checkIdx) {
+                        if (std::invoke(predicate, originalRef[checkIdx])) {
+                            if (checkIdx != writeIdx)
+                                originalRef[writeIdx++] = std::move(originalRef[checkIdx]);
                         }
                     }
-                    return vec;
+                    // share the original vector, to avoid unnecessary copy
+                    return range.get();
                 }
             };
         };
@@ -114,24 +128,38 @@ namespace WayLib::Ranges {
 
     template<typename Transformer>
     auto map(Transformer transformer) {
-        return [transformer = std::move(transformer)](auto &&range) {
+        return [transformer = std::forward<Transformer>(transformer)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = std::decay_t<decltype(range)>;
             using U = std::remove_reference_t<std::invoke_result_t<decltype(transformer), T> >;
-            return Range<U, ParentType>{
-                std::forward<decltype(range)>(range),
-                [transformer](auto &&range) {
-                    std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
 
-                    auto &&data = range.get();
+            if constexpr (!std::is_same_v<T, U>) {
+                return Range<U, ParentType>{
+                    std::forward<decltype(range)>(range),
+                    [transformer](auto &&range) {
+                        std::shared_ptr<std::vector<U> > vec = std::make_shared<std::vector<U> >();
 
-                    for (auto &item: *data.get()) {
-                        vec->push_back(std::invoke(transformer, item));
+                        auto &&data = range.get();
+
+                        for (auto &item: *data.get()) {
+                            vec->push_back(std::invoke(transformer, item));
+                        }
+
+                        return vec;
                     }
-
-                    return vec;
-                }
-            };
+                };
+            } else {
+                return Range<U, ParentType>{
+                    std::forward<decltype(range)>(range),
+                    [transformer](auto &&range) {
+                        auto &&data = range.get();
+                        for (auto &item: *data.get()) {
+                            item = std::invoke(transformer, std::move(item));
+                        }
+                        return data;
+                    }
+                };
+            }
         };
     }
 
@@ -385,7 +413,7 @@ namespace WayLib::Ranges {
                 [f = std::move(f)](auto &&range) {
                     auto data = *range.get();
                     std::sort(data.begin(), data.end(), f);
-                    return std::make_shared<std::vector<T> >(std::move(data));
+                    return range.get();
                 }
             };
         };

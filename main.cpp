@@ -18,6 +18,7 @@ using namespace std::string_literals;
 
 void failedCode();
 
+
 int main() {
     auto &pool = WayLib::ThreadPool::GlobalInstance();
     pool.dispatch([]() {
@@ -79,6 +80,65 @@ int main() {
     std::cout << std::endl;
 
     std::cout << "Result: " << typeid(future).name() << std::endl;
+
+    struct X {
+        X() = default;
+
+        X(const X &) {
+            std::cout << "Copy constructor" << std::endl;
+        }
+
+        X(X &&) noexcept {
+            std::cout << "Move constructor" << std::endl;
+        }
+
+        X &operator=(const X &) {
+            std::cout << "Copy assignment" << std::endl;
+            return *this;
+        }
+
+        X &operator=(X &&) noexcept {
+            std::cout << "Move assignment" << std::endl;
+            return *this;
+        }
+
+        ~X() = default;
+    };
+
+    std::vector<X> xVec(1);
+
+    std::cout << "======================\n" << std::endl;
+
+    using T = typename std::decay_t<decltype(xVec)>::value_type;
+
+    WayLib::Range<T, void>{
+        [ptr = std::shared_ptr<std::vector<T> >(&xVec, [](std::vector<T> *) {})]() {
+            return ptr;
+        }
+    };
+
+    /*[](const auto &vec) {
+        using T = typename std::decay_t<decltype(vec)>::value_type;
+        return WayLib::Range<X, void>{
+            [ptr = std::shared_ptr<std::vector<X> >(&vec, [] (std::vector<X>*) {})]() {
+                return ptr;
+            }
+        };
+    }(xVec);*/
+
+    xVec | WayLib::Ranges::asRangeNoOwnership() | WayLib::Ranges::forEach([](X &x) {
+        std::cout << "Hello" << std::endl;
+    }) | WayLib::Ranges::map([](X &x) -> X&& {
+        return std::move(x);
+    }) | WayLib::Ranges::forEach([](X &x) {
+        std::cout << "Hello" << std::endl;
+    }) | WayLib::Ranges::sync();
+
+    int b = 1;
+
+    std::shared_ptr<int> ptr = std::shared_ptr<int>(&b, [](int *ptr) {
+        std::cout << "Deleting" << std::endl;
+    });
 }
 
 void failedCode() {}
