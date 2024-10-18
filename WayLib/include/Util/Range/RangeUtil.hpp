@@ -101,8 +101,9 @@ namespace WayLib::Ranges {
 
     template<typename Visitor>
     auto forEachImmediate(Visitor &&visitor) {
-        return [&visitor](auto &&range) {
-            return range | forEach(std::forward<Visitor>(visitor)) | sync();
+        return [visitor = std::forward<Visitor>(visitor)](auto &&range) {
+            // return range | OperatorExtensions::Util::PipeForward(forEach(std::move(visitor)), sync());
+            return range | forEach(std::move(visitor)) | sync();
         };
     }
 
@@ -110,7 +111,7 @@ namespace WayLib::Ranges {
     auto filter(Predicate predicate) {
         return [predicate = std::move(predicate)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
-            using ParentType = typename std::decay_t<decltype(range)>;
+            using ParentType = std::decay_t<decltype(range)>;
 
             return Range<T, ParentType>{
                 std::forward<decltype(range)>(range),

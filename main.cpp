@@ -18,6 +18,13 @@ using namespace std::string_literals;
 
 void failedCode();
 
+int foo(double) {
+    return 1;
+}
+
+std::string bar(int) {
+    return "a";
+}
 
 int main() {
     auto &pool = WayLib::ThreadPool::GlobalInstance();
@@ -117,16 +124,7 @@ int main() {
         }
     };
 
-    /*[](const auto &vec) {
-        using T = typename std::decay_t<decltype(vec)>::value_type;
-        return WayLib::Range<X, void>{
-            [ptr = std::shared_ptr<std::vector<X> >(&vec, [] (std::vector<X>*) {})]() {
-                return ptr;
-            }
-        };
-    }(xVec);*/
-
-    xVec | WayLib::Ranges::asRangeNoOwnership() | WayLib::Ranges::forEach([](X &x) {
+    auto some = xVec | WayLib::Ranges::asRangeNoOwnership() | WayLib::Ranges::forEach([](X &x) {
         std::cout << "Hello" << std::endl;
     }) | WayLib::Ranges::map([](X &x) -> X&& {
         return std::move(x);
@@ -134,7 +132,15 @@ int main() {
         std::cout << "Hello" << std::endl;
     });
 
+    std::cout << typeid(some).name();
+
+    std::cout << std::endl;
+
     int b = 1;
+
+    auto&& func = Util::PipeRef(foo, bar);
+
+    std::cout << func(1.0) << std::endl;
 
     std::shared_ptr<int> ptr = std::shared_ptr<int>(&b, [](int *ptr) {
         std::cout << "Deleting" << std::endl;
