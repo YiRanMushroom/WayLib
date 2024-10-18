@@ -22,4 +22,5 @@ add_executable(WayLib_Development
         WayLib/include/Util/Range/Range.hpp
         WayLib/include/Util/Range/RangeUtil.hpp
         WayLib/include/Util/TypeTraits.hpp
+        WayLib/include/Util/OperatorExtension.hpp
 )

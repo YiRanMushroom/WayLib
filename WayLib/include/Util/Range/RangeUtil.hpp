@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include "Util/TypeTraits.hpp"
 
 namespace WayLib::Ranges {
     namespace Collectors {
@@ -330,7 +331,6 @@ namespace WayLib::Ranges {
 
     template<typename F>
     inline auto flatMap(F &&f) {
-
         return [f = std::forward<F>(f)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = std::decay_t<decltype(range)>;
@@ -357,7 +357,7 @@ namespace WayLib::Ranges {
     template<typename F>
     inline auto firstMatch(F &&f) {
         return [f = std::forward<F>(f)](auto &&range) {
-            std::optional<typename decltype(range)::value_type> result;
+            std::optional<typename std::remove_reference_t<decltype(range)>::value_type> result;
             for (auto &item: *range.get()) {
                 if (std::invoke(f, item)) {
                     result = item;
@@ -453,12 +453,12 @@ namespace WayLib::Ranges {
     }
 }
 
-template<typename F>
-auto operator|(std::string &&str, F &&converter) {
+template<typename F, std::void_t<decltype(std::is_invocable_v<F, std::string &&>)>* = nullptr>
+decltype(auto) operator|(std::string &&str, F &&converter) {
     return converter(std::move(str)) | WayLib::Ranges::autoSync();
 }
 
-template<typename F>
-auto operator|(const std::string &str, F &&converter) {
+template<typename F, std::void_t<decltype(std::is_invocable_v<F, const std::string &>)>* = nullptr>
+decltype(auto) operator|(const std::string &str, F &&converter) {
     return converter(str) | WayLib::Ranges::autoSync();
 }

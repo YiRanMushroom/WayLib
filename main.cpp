@@ -9,6 +9,7 @@
 #include "Container/ThreadSafeQueue.hpp"*/
 #include <string>
 
+#include "Util/OperatorExtension.hpp"
 #include "Util/ThreadPool.hpp"
 #include "Util/Range/Range.hpp"
 #include "Util/Range/RangeUtil.hpp"
@@ -44,20 +45,27 @@ int main() {
 
     auto next = (*future.get());
 
-    "a,b,c,d,e,f,gasdfas,askfl j"s | WayLib::Ranges::toRange() | WayLib::Ranges::split(',')
-            | WayLib::Ranges::map(WayLib::Ranges::Mapper::CharVectorToString())
-            | WayLib::Ranges::forEach([](const std::string &str) {
-                std::cout << str << std::endl;
-            }) | WayLib::Ranges::flatMap([](const std::string &str) {
-                return std::vector{str, str + "1", str + "2"};
-            }) | WayLib::Ranges::forEach([](const std::string &str) {
-                std::cout << str << std::endl;
-            }) | WayLib::Ranges::sortedByDescending([](const std::string &str) {
-                return str.size();
-            })
-            | WayLib::Ranges::forEach([](const std::string &str) {
-                std::cout << str << std::endl;
-            }) | WayLib::Ranges::sync();
+    using namespace WayLib::OperatorExtensions;
+
+    auto something = "a,b,c,d,e,f,gasdfas,askfl j"s | WayLib::Ranges::toRange() | WayLib::Ranges::split(',')
+                     | WayLib::Ranges::map(WayLib::Ranges::Mapper::CharVectorToString())
+                     | WayLib::Ranges::forEach([](const std::string &str) {
+                         std::cout << str << std::endl;
+                     }) | WayLib::Ranges::flatMap([](const std::string &str) {
+                         return std::vector{str, str + "1", str + "2"};
+                     }) | WayLib::Ranges::forEach([](const std::string &str) {
+                         std::cout << str << std::endl;
+                     }) | WayLib::Ranges::sortedByDescending([](const std::string &str) {
+                         return str.size();
+                     })
+                     | WayLib::Ranges::forEach([](const std::string &str) {
+                         std::cout << str << std::endl;
+                     })
+                     | WayLib::Ranges::append("hel"s, "lo "s)
+                     | WayLib::Ranges::firstMatch([](const std::string &str) {
+                         return str.size() == 3;
+                     }) | WayLib::MemberFunctionExtensions::dereference();
+
 
     std::cout << "======================\n" << std::endl;
 

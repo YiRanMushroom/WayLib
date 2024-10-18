@@ -2,7 +2,6 @@
 #include <type_traits>
 
 namespace WayLib {
-    template<template<typename...> class Template, typename Instance, typename Default = void>
-    constexpr bool is_specialization_of_v = false;
-
+    template<auto... args>
+    using value_void_ptr_t = void*;
 }
