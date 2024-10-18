@@ -46,11 +46,7 @@ namespace WayLib::Ranges {
 
                     vec->reserve(container.size());
                     for (auto &item: container) {
-                        if constexpr (std::is_rvalue_reference_v<decltype(container)>) {
-                            vec->push_back(std::move(item));
-                        } else {
-                            vec->push_back(item);
-                        }
+                        vec->push_back(item);
                     }
 
                     return Range<T, void>([vec]() {
@@ -70,7 +66,8 @@ namespace WayLib::Ranges {
         return [](const auto &vec) {
             using T = typename std::decay_t<decltype(vec)>::value_type;
             return Range<T, void>{
-                [ptr = std::shared_ptr<std::vector<T> >(const_cast<std::vector<T> *>(&vec), fakeDeleter<std::vector<T>>())]() {
+                [ptr = std::shared_ptr<std::vector<T> >(const_cast<std::vector<T> *>(&vec),
+                                                        fakeDeleter<std::vector<T> >())]() {
                     return ptr;
                 }
             };
@@ -99,6 +96,13 @@ namespace WayLib::Ranges {
 
                     return range.get();
                 });
+        };
+    }
+
+    template<typename Visitor>
+    auto forEachImmediate(Visitor &&visitor) {
+        return [&visitor](auto &&range) {
+            return range | forEach(std::forward<Visitor>(visitor)) | sync();
         };
     }
 

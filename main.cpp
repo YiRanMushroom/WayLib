@@ -130,9 +130,9 @@ int main() {
         std::cout << "Hello" << std::endl;
     }) | WayLib::Ranges::map([](X &x) -> X&& {
         return std::move(x);
-    }) | WayLib::Ranges::forEach([](X &x) {
+    }) | WayLib::Ranges::forEachImmediate([](X &x) {
         std::cout << "Hello" << std::endl;
-    }) | WayLib::Ranges::sync();
+    });
 
     int b = 1;
 
