@@ -140,6 +140,10 @@ int main() {
 
     auto&& func = Util::PipeRef(foo, bar);
 
+    using namespace WayLib::OperatorExtensions;
+
+    // 1 | bar;
+
     std::cout << func(1.0) << std::endl;
 
     std::shared_ptr<int> ptr = std::shared_ptr<int>(&b, [](int *ptr) {
