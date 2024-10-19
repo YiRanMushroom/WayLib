@@ -132,7 +132,7 @@ namespace WayLib::Ranges {
     }
 
     template<typename Transformer>
-    auto map(Transformer transformer) {
+    auto map(Transformer&& transformer) {
         return [transformer = std::forward<Transformer>(transformer)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = std::decay_t<decltype(range)>;
