@@ -118,7 +118,7 @@ int main() {
 
     auto some = xVec | WayLib::Ranges::asRangeNoOwnership() | WayLib::Ranges::forEach([](X &x) {
         std::cout << "Hello" << std::endl;
-    }) | WayLib::Ranges::map([](X &x) -> X&& {
+    }) | WayLib::Ranges::map([](X &x) -> X &&{
         return std::move(x);
     }) | WayLib::Ranges::forEachImmediate([](X &x) {
         std::cout << "Hello" << std::endl;
@@ -130,7 +130,7 @@ int main() {
 
     int b = 1;
 
-    auto&& func = Util::PipeRef(foo, bar);
+    auto &&func = Util::PipeRef(foo, bar);
 
     using namespace WayLib::OperatorExtensions;
 
