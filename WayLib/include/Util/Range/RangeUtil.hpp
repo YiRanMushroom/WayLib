@@ -65,6 +65,8 @@ namespace WayLib::Ranges {
     inline auto asRangeNoOwnership() {
         return [](const auto &vec) {
             using T = typename std::decay_t<decltype(vec)>::value_type;
+            static_assert(std::is_same_v<std::vector<T>, std::decay_t<decltype(vec)> >,
+                          "asRangeNoOwnership can only be used with std::vector<T>");
             return Range<T, void>{
                 [ptr = std::shared_ptr<std::vector<T> >(const_cast<std::vector<T> *>(&vec),
                                                         fakeDeleter<std::vector<T> >())]() {
@@ -73,6 +75,19 @@ namespace WayLib::Ranges {
             };
         };
     }
+
+    inline auto shareRange() {
+        return [](const auto &ptr) {
+            using T = std::decay_t<decltype(*(ptr->begin()))>;
+            static_assert(std::is_same_v<std::decay_t<decltype(ptr)>, std::shared_ptr<std::vector<T> > >);
+            return Range<T, void>{
+                [ptr]() {
+                    return ptr;
+                }
+            };
+        };
+    }
+
 
     template<typename Collector>
     auto collect(Collector collector) {
@@ -132,7 +147,7 @@ namespace WayLib::Ranges {
     }
 
     template<typename Transformer>
-    auto map(Transformer&& transformer) {
+    auto map(Transformer &&transformer) {
         return [transformer = std::forward<Transformer>(transformer)](auto &&range) {
             using T = typename std::decay_t<decltype(range)>::value_type;
             using ParentType = std::decay_t<decltype(range)>;

@@ -138,8 +138,10 @@ int main() {
 
     std::cout << func(1.0) << std::endl;
 
-    std::shared_ptr<int> ptr = std::shared_ptr<int>(&b, [](int *ptr) {
-        std::cout << "Deleting" << std::endl;
+    auto sharedVector = std::make_shared<std::vector<int> >(4);
+
+    sharedVector | WayLib::Ranges::shareRange() | WayLib::Ranges::forEachImmediate([](int &item) {
+        std::cout << item << std::endl;
     });
 }
 
