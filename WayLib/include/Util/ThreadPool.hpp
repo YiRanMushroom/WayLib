@@ -55,7 +55,7 @@ namespace WayLib {
 
         template<typename F, typename... Args>
         [[nodiscard]] auto dispatch(F &&function, Args &&... args) {
-            using ReturnType = std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>;
+            using ReturnType = std::remove_reference_t<std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>;
             auto task = std::make_unique<std::packaged_task<ReturnType()> >(
                 std::bind(std::forward<F>(function), std::forward<Args>(args)...)
             );

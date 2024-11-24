@@ -61,8 +61,6 @@ namespace WayLib {
             return m_Parent;
         }
 
-        ~Range() = default;
-
         auto begin() const {
             return get()->begin();
         }
@@ -74,6 +72,8 @@ namespace WayLib {
         auto size() const {
             return get()->size();
         }
+
+        ~Range() noexcept = default;
     };
 
     template<typename T>
@@ -114,8 +114,6 @@ namespace WayLib {
             return m_Transformer;
         }
 
-        ~Range() = default;
-
         auto begin() const {
             return get()->begin();
         }
@@ -127,6 +125,8 @@ namespace WayLib {
         auto size() const {
             return get()->size();
         }
+
+        ~Range() noexcept = default;
     };
 
     namespace Ranges {
@@ -169,7 +169,7 @@ namespace WayLib {
 
         inline auto asyncSync() {
             return [](auto &&range) {
-                return ThreadPool::Async(syncAsUniquePtr(), std::forward<decltype(range)>(range));
+                return ThreadPool::Async(sync(), std::forward<decltype(range)>(range));
             };
         }
 

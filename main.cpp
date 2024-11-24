@@ -10,13 +10,33 @@ using namespace std::string_literals;
 
 void failedCode();
 
-int foo(double) {
-    return 1;
+double toDouble(const std::string &str) {
+    double res{std::stod(str)};
+    return res;
 }
 
-std::string bar(int) {
-    return "a";
+double square(double x) {
+    return x * x;
 }
+
+int toInt(double x) {
+    return static_cast<int>(x);
+}
+
+int factorial(int x) {
+    return x == 0 ? 1 : x * factorial(x - 1);
+}
+
+struct SomeLambda {
+    int x;
+
+    SomeLambda(int x) : x(x) {
+    }
+
+    int operator()(int y) const {
+        return x + y;
+    }
+};
 
 int main() {
     auto &pool = WayLib::ThreadPool::GlobalInstance();
@@ -26,6 +46,14 @@ int main() {
 
     std::vector<int> vec = {1, 2, 3, 4, 5};
     auto range = vec | WayLib::Ranges::toRange();
+
+    std::cout << std::boolalpha << std::is_trivially_destructible_v<std::unique_ptr<int>>;
+    std::cout << std::boolalpha << std::is_trivially_copy_constructible_v<std::unique_ptr<int>>;
+    std::cout << std::boolalpha << std::is_trivially_copy_assignable_v<std::unique_ptr<int>>;
+
+    std::function f = []() {
+        return 1;
+    };
 
     auto future = range
                   | WayLib::Ranges::move()
@@ -43,7 +71,7 @@ int main() {
                   | WayLib::Ranges::asyncSync();
 
 
-    auto next = (*future.get());
+    auto next = future.get();
 
     using namespace WayLib::OperatorExtensions;
 
@@ -69,7 +97,7 @@ int main() {
 
     std::cout << "======================\n" << std::endl;
 
-    std::vector<std::string> vec2 = next | WayLib::Ranges::move() | WayLib::Ranges::collect(
+    /*std::vector<std::string> vec2 = next | WayLib::Ranges::move() | WayLib::Ranges::collect(
                                         WayLib::Ranges::Collectors::ToVector());
 
     for (const auto &item: vec2) {
@@ -78,7 +106,7 @@ int main() {
 
     std::cout << std::endl;
 
-    std::cout << "Result: " << typeid(future).name() << std::endl;
+    std::cout << "Result: " << typeid(future).name() << std::endl;*/
 
     struct X {
         X() = default;
@@ -111,7 +139,8 @@ int main() {
     using T = typename std::decay_t<decltype(xVec)>::value_type;
 
     WayLib::Range<T, void>{
-        [ptr = std::shared_ptr<std::vector<T> >(&xVec, [](std::vector<T> *) {})]() {
+        [ptr = std::shared_ptr<std::vector<T> >(&xVec, [](std::vector<T> *) {
+        })]() {
             return ptr;
         }
     };
@@ -130,19 +159,31 @@ int main() {
 
     int b = 1;
 
-    auto &&func = Util::PipeRef(foo, bar);
 
     using namespace WayLib::OperatorExtensions;
 
     // 1 | bar;
 
-    std::cout << func(1.0) << std::endl;
+    using Tp = decltype(Util::PipeForward(toDouble, square, toInt, factorial));
+
+    Tp func = Util::PipeForward(toDouble, square, toInt, factorial);
+
+    std::cout << func("3.5") << std::endl;
 
     auto sharedVector = std::make_shared<std::vector<int> >(4);
 
     sharedVector | WayLib::Ranges::shareRange() | WayLib::Ranges::forEachImmediate([](int &item) {
         std::cout << item << std::endl;
     });
+
+    int whate = 0;
+
+    int &whateRef = whate;
+
+    whateRef = 1;
+
+    int res = SomeLambda{1}(2);
 }
 
-void failedCode() {}
+void failedCode() {
+}

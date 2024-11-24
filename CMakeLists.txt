@@ -13,7 +13,6 @@ include_directories(${CMAKE_SOURCE_DIR}/WayLib/include
 # This line must be added before the add_executable or add_library command.
 
 add_executable(WayLib_Development
-        main.cpp
         WayLib/include/Util/FileSystem.hpp
         WayLib/include/Util/Exceptions.hpp
         WayLib/include/CRTP/inject_stream_traits.hpp
@@ -23,4 +22,5 @@ add_executable(WayLib_Development
         WayLib/include/Util/Range/RangeUtil.hpp
         WayLib/include/Util/TypeTraits.hpp
         WayLib/include/Util/OperatorExtension.hpp
+        main.cpp
 )
