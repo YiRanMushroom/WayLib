@@ -15,17 +15,17 @@ namespace WayLib {
 
         namespace Util {
             namespace Impl {
+                template<typename T, typename Function>
+                decltype(auto) InvokePipeChain(T &&arg, Function &&function) {
+                    return function(std::forward<T>(arg));
+                }
+
                 template<typename T, typename First, typename... Function>
                 decltype(auto) InvokePipeChain(T &&arg, First &&first, Function &&... functions) {
                     using namespace OperatorExtensions;
                     return InvokePipeChain(std::invoke(std::forward<First>(first),
                                                        std::forward<T>(arg)),
                                            std::forward<Function>(functions)...);
-                }
-
-                template<typename T, typename Function>
-                decltype(auto) InvokePipeChain(T &&arg, Function &&function) {
-                    return function(std::forward<T>(arg));
                 }
 
                 template<typename Tuple, size_t... indices>
