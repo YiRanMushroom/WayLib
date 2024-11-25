@@ -59,12 +59,13 @@ namespace WayLib {
             auto task = std::make_unique<std::packaged_task<ReturnType()> >(
                 std::bind(std::forward<F>(function), std::forward<Args>(args)...)
             );
-            auto future = task->get_future(); {
+            auto future = task->get_future();
+            {
                 std::unique_lock lock(m_Mutex);
                 m_Tasks.emplace(
                     [inner = task.get()]() mutable {
                         std::unique_ptr<std::packaged_task<ReturnType()> > task(inner);
-                        std::invoke(*task);
+                        task->operator()();
                     });
             }
             task.release();
@@ -92,7 +93,7 @@ namespace WayLib {
         }
 
         template<typename... Args>
-        static auto Async(Args &&... args) {
+        [[nodiscard]] static auto Async(Args &&... args) {
             return GlobalInstance().dispatch(std::forward<decltype(args)>(args)...);
         }
 

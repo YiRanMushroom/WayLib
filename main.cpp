@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include "Util/OperatorExtension.hpp"
 #include "Util/ThreadPool.hpp"
